@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HotOrBot 🔥🤖</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Impact&family=Inter:wght@400;600;700;900&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#000;color:#fff;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        
+        /* Screens */
+        .screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:1.5rem;text-align:center;position:absolute;top:0;left:0}
+        .screen.active{display:flex}
+        
+        /* Logo */
+        .logo{font-family:'Impact',sans-serif;font-size:clamp(3rem,12vw,6rem);text-transform:uppercase;line-height:1;margin-bottom:0.5rem}
+        .logo .hot{color:#FF4500;text-shadow:0 0 40px rgba(255,69,0,0.8)}
+        .logo .or{color:#666;font-size:0.5em;vertical-align:middle;margin:0 0.1em}
+        .logo .bot{color:#00BFFF;text-shadow:0 0 40px rgba(0,191,255,0.8)}
+        
+        /* Splash */
+        #splash .tagline{color:#FFD700;font-size:clamp(0.9rem,2.5vw,1.3rem);margin-bottom:2rem;font-weight:700}
+        
+        /* Play button */
+        .play-btn{padding:1.2rem 3rem;font-family:'Impact',sans-serif;font-size:1.8rem;border:none;border-radius:16px;cursor:pointer;text-transform:uppercase;letter-spacing:3px;background:linear-gradient(135deg,#FF4500,#FF6347);color:#fff;box-shadow:0 4px 30px rgba(255,69,0,0.6);transition:all 0.3s}
+        .play-btn:hover{transform:scale(1.05);box-shadow:0 6px 40px rgba(255,69,0,0.8)}
+        
+        /* Video screen */
+        #game{position:relative}
+        .video-container{width:min(100vw,400px);height:min(70vh,600px);border-radius:20px;overflow:hidden;background:#111;position:relative;margin-bottom:1rem}
+        .video-container video{width:100%;height:100%;object-fit:cover}
+        .video-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;background:linear-gradient(135deg,#1a1a2e,#16213e)}
+        .name-tag{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,0.7);padding:6px 14px;border-radius:20px;font-weight:600;font-size:0.9rem;backdrop-filter:blur(10px)}
+        .timer{position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);padding:6px 12px;border-radius:20px;font-size:0.85rem;font-weight:600}
+        
+        /* Vote buttons */
+        .vote-row{display:flex;gap:1rem;width:min(100vw - 3rem,400px);margin-top:0.5rem}
+        .vote-btn{flex:1;padding:1rem;font-family:'Impact',sans-serif;font-size:1.4rem;border:none;border-radius:14px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.2s;color:#fff}
+        .vote-btn:active{transform:scale(0.95)}
+        .vote-btn.hot{background:linear-gradient(135deg,#FF4500,#FF6347);box-shadow:0 4px 20px rgba(255,69,0,0.4)}
+        .vote-btn.not{background:linear-gradient(135deg,#333,#555);box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+        .vote-btn.human{background:linear-gradient(135deg,#9B59B6,#8E44AD);box-shadow:0 4px 20px rgba(155,89,182,0.4)}
+        .vote-btn.bot-btn{background:linear-gradient(135deg,#0077B6,#00BFFF);box-shadow:0 4px 20px rgba(0,191,255,0.4)}
+        
+        .prompt{font-size:clamp(1rem,3vw,1.3rem);font-weight:700;margin-bottom:0.5rem;color:#ccc}
+        
+        /* Reveal */
+        #reveal .reveal-result{font-family:'Impact',sans-serif;font-size:clamp(2rem,8vw,4rem);text-transform:uppercase;margin:1rem 0;animation:revealPop 0.5s ease-out}
+        #reveal .reveal-emoji{font-size:5rem;margin-bottom:0.5rem;animation:revealPop 0.5s ease-out}
+        #reveal .reveal-detail{color:#999;font-size:1rem;margin-bottom:0.5rem;line-height:1.5}
+        .reveal-card{background:linear-gradient(135deg,#111,#1a1a1a);border:2px solid #333;border-radius:20px;padding:2rem;max-width:360px;width:100%}
+        .reveal-card.correct{border-color:#00FF88;box-shadow:0 0 30px rgba(0,255,136,0.3)}
+        .reveal-card.wrong{border-color:#FF4500;box-shadow:0 0 30px rgba(255,69,0,0.3)}
+        .guess-result{font-weight:700;font-size:1.1rem;margin:0.5rem 0}
+        .guess-result.correct{color:#00FF88}
+        .guess-result.wrong{color:#FF4500}
+        
+        .next-btn{margin-top:1.5rem;padding:1rem 2.5rem;font-family:'Impact',sans-serif;font-size:1.3rem;border:none;border-radius:14px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;background:linear-gradient(135deg,#FF4500,#FF6347);color:#fff;box-shadow:0 4px 20px rgba(255,69,0,0.4);transition:all 0.3s}
+        .next-btn:hover{transform:scale(1.05)}
+        
+        /* Stats bar */
+        .stats-bar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-around;padding:10px 16px;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);font-size:0.8rem;font-weight:600;z-index:100;border-bottom:1px solid #222}
+        .stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+        .stat-val{color:#FFD700;font-size:1.1rem}
+        .stat-label{color:#666;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px}
+        
+        /* Summary */
+        #summary .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:360px;width:100%;margin:1.5rem 0}
+        .summary-stat{background:linear-gradient(135deg,#111,#1a1a1a);border:1px solid #222;border-radius:14px;padding:1.2rem;text-align:center}
+        .summary-stat .big{font-family:'Impact',sans-serif;font-size:2.5rem;color:#FFD700}
+        .summary-stat .label{color:#666;font-size:0.8rem;text-transform:uppercase;margin-top:4px}
+        #summary .verdict{font-family:'Impact',sans-serif;font-size:clamp(1.2rem,4vw,1.8rem);margin-top:1rem;text-transform:uppercase}
+        
+        /* Animations */
+        @keyframes revealPop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+        @keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+        .confetti-piece{position:fixed;top:-20px;width:10px;height:10px;z-index:200;animation:confetti 2s ease-out forwards;pointer-events:none}
+        
+        /* Countdown overlay */
+        .countdown-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:10;font-family:'Impact',sans-serif;font-size:5rem;color:#FFD700;animation:revealPop 0.3s ease-out}
+        
+        /* Hidden */
+        .hidden{display:none!important}
+    </style>
+</head>
+<body>
+    <!-- Stats Bar (hidden on splash) -->
+    <div class="stats-bar hidden" id="statsBar">
+        <div class="stat"><span class="stat-val" id="statViewed">0</span><span class="stat-label">Viewed</span></div>
+        <div class="stat"><span class="stat-val" id="statHotRate">0%</span><span class="stat-label">Hot Rate</span></div>
+        <div class="stat"><span class="stat-val" id="statAccuracy">0%</span><span class="stat-label">Detection</span></div>
+        <div class="stat"><span class="stat-val" id="statStreak">0</span><span class="stat-label">Streak</span></div>
+    </div>
+
+    <!-- SPLASH -->
+    <div class="screen active" id="splash">
+        <div class="logo"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
+        <div class="tagline">Can you spot the AI? 🎭</div>
+        <button class="play-btn" onclick="startGame()">▶ PLAY</button>
+    </div>
+
+    <!-- GAME (video + vote) -->
+    <div class="screen" id="game">
+        <div class="video-container" id="videoContainer">
+            <div class="video-placeholder" id="videoPlaceholder">🎬</div>
+            <video id="videoPlayer" playsinline preload="auto" style="display:none"></video>
+            <div class="name-tag" id="nameTag">Alex, 28</div>
+            <div class="timer" id="timer">0:20</div>
+        </div>
+        
+        <!-- Phase 1: HOT or NOT -->
+        <div id="phase1">
+            <div class="prompt">Did you feel the vibe?</div>
+            <div class="vote-row">
+                <button class="vote-btn not" onclick="voteHot(false)">❌ NOT</button>
+                <button class="vote-btn hot" onclick="voteHot(true)">🔥 HOT</button>
+            </div>
+        </div>
+        
+        <!-- Phase 2: HUMAN or BOT -->
+        <div id="phase2" class="hidden">
+            <div class="prompt">Was that real or AI?</div>
+            <div class="vote-row">
+                <button class="vote-btn bot-btn" onclick="guessBot(true)">🤖 BOT</button>
+                <button class="vote-btn human" onclick="guessBot(false)">👤 HUMAN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVEAL -->
+    <div class="screen" id="reveal">
+        <div class="reveal-card" id="revealCard">
+            <div class="reveal-emoji" id="revealEmoji">🤖</div>
+            <div class="reveal-result" id="revealResult">IT WAS A BOT!</div>
+            <div class="reveal-detail" id="revealDetail"></div>
+            <div class="guess-result" id="guessResult"></div>
+        </div>
+        <button class="next-btn" id="nextBtn" onclick="nextVideo()">NEXT →</button>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="screen" id="summary">
+        <div class="logo" style="font-size:clamp(2rem,8vw,4rem);margin-bottom:0.5rem"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
+        <div style="color:#FFD700;font-weight:700;margin-bottom:1rem">Your Results</div>
+        <div class="summary-grid">
+            <div class="summary-stat"><div class="big" id="sumViewed">0</div><div class="label">Videos</div></div>
+            <div class="summary-stat"><div class="big" id="sumCorrect">0</div><div class="label">Correct Guesses</div></div>
+            <div class="summary-stat"><div class="big" id="sumHotRate">0%</div><div class="label">Hot Rate</div></div>
+            <div class="summary-stat"><div class="big" id="sumAccuracy">0%</div><div class="label">Bot Detection</div></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+        <button class="play-btn" style="margin-top:1.5rem;font-size:1.3rem" onclick="resetGame()">PLAY AGAIN 🔥</button>
+        <button class="next-btn" style="background:linear-gradient(135deg,#333,#555);margin-top:0.5rem;font-size:1rem" onclick="shareResults()">SHARE RESULTS 📱</button>
+    </div>
+
+    <script>
+        // === VIDEO DATA ===
+        // Replace URLs with real videos. isBot = true means AI-generated.
+        const VIDEOS = [
+            { url: "https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot/videos/amanda_heygen_v3.mp4", isBot: true, name: "Amanda", age: 28, fallbackEmoji: "🥰" },
+        ];
+
+        let currentIndex = 0;
+        let stats = { viewed: 0, hots: 0, correctGuesses: 0, streak: 0, bestStreak: 0 };
+        let currentVote = null;
+        let currentGuess = null;
+        let timerInterval = null;
+        let shuffled = [];
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function startGame() {
+            shuffled = [...VIDEOS]; // no shuffle until we have more videos
+            currentIndex = 0;
+            stats = { viewed: 0, hots: 0, correctGuesses: 0, streak: 0, bestStreak: 0 };
+            document.getElementById('statsBar').classList.remove('hidden');
+            updateStats();
+            loadVideo();
+        }
+
+        function loadVideo() {
+            const v = shuffled[currentIndex];
+            const container = document.getElementById('videoContainer');
+            const player = document.getElementById('videoPlayer');
+            const placeholder = document.getElementById('videoPlaceholder');
+            
+            document.getElementById('nameTag').textContent = `${v.name}, ${v.age}`;
+            document.getElementById('phase1').classList.remove('hidden');
+            document.getElementById('phase2').classList.add('hidden');
+            currentVote = null;
+            currentGuess = null;
+
+            if (v.url) {
+                player.src = v.url;
+                player.style.display = 'block';
+                placeholder.style.display = 'none';
+                player.muted = false;
+                player.play().catch(() => { player.muted = true; player.play(); });
+            } else {
+                player.style.display = 'none';
+                placeholder.style.display = 'flex';
+                placeholder.textContent = v.fallbackEmoji;
+            }
+
+            // Timer
+            let seconds = 20;
+            document.getElementById('timer').textContent = `0:${seconds.toString().padStart(2,'0')}`;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) { clearInterval(timerInterval); seconds = 0; }
+                document.getElementById('timer').textContent = `0:${seconds.toString().padStart(2,'0')}`;
+            }, 1000);
+
+            showScreen('game');
+        }
+
+        function voteHot(isHot) {
+            currentVote = isHot;
+            if (isHot) stats.hots++;
+            document.getElementById('phase1').classList.add('hidden');
+            document.getElementById('phase2').classList.remove('hidden');
+        }
+
+        function guessBot(guessedBot) {
+            currentGuess = guessedBot;
+            clearInterval(timerInterval);
+            const video = shuffled[currentIndex];
+            const player = document.getElementById('videoPlayer');
+            if (player.src) player.pause();
+            
+            stats.viewed++;
+            const correct = (guessedBot === video.isBot);
+            if (correct) {
+                stats.correctGuesses++;
+                stats.streak++;
+                if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+            } else {
+                stats.streak = 0;
+            }
+            
+            updateStats();
+            showReveal(video, correct);
+        }
+
+        function showReveal(video, correct) {
+            const card = document.getElementById('revealCard');
+            const emoji = document.getElementById('revealEmoji');
+            const result = document.getElementById('revealResult');
+            const detail = document.getElementById('revealDetail');
+            const guessEl = document.getElementById('guessResult');
+            
+            card.className = 'reveal-card ' + (correct ? 'correct' : 'wrong');
+            
+            if (video.isBot) {
+                emoji.textContent = '🤖';
+                result.textContent = 'IT WAS A BOT!';
+                result.style.color = '#00BFFF';
+                detail.textContent = `${video.name}'s AI agent showed up for them.`;
+            } else {
+                emoji.textContent = '👤';
+                result.textContent = 'THAT WAS REAL!';
+                result.style.color = '#FF4500';
+                detail.textContent = `The real ${video.name} was on the other side.`;
+            }
+            
+            if (correct) {
+                guessEl.textContent = `✅ You guessed correctly! (${stats.streak} streak)`;
+                guessEl.className = 'guess-result correct';
+                spawnConfetti();
+            } else {
+                guessEl.textContent = `❌ You guessed wrong!`;
+                guessEl.className = 'guess-result wrong';
+            }
+
+            const voteText = currentVote ? '🔥 HOT' : '❌ NOT';
+            detail.textContent += `\nYou voted: ${voteText}`;
+
+            // Change button text on last video
+            const btn = document.getElementById('nextBtn');
+            btn.textContent = (currentIndex >= shuffled.length - 1) ? 'SEE RESULTS →' : 'NEXT →';
+            
+            showScreen('reveal');
+        }
+
+        function nextVideo() {
+            currentIndex++;
+            if (currentIndex >= shuffled.length) {
+                showSummary();
+            } else {
+                loadVideo();
+            }
+        }
+
+        function showSummary() {
+            document.getElementById('statsBar').classList.add('hidden');
+            const accuracy = stats.viewed > 0 ? Math.round((stats.correctGuesses / stats.viewed) * 100) : 0;
+            const hotRate = stats.viewed > 0 ? Math.round((stats.hots / stats.viewed) * 100) : 0;
+            
+            document.getElementById('sumViewed').textContent = stats.viewed;
+            document.getElementById('sumCorrect').textContent = stats.correctGuesses;
+            document.getElementById('sumHotRate').textContent = hotRate + '%';
+            document.getElementById('sumAccuracy').textContent = accuracy + '%';
+            
+            const v = document.getElementById('verdict');
+            if (accuracy >= 80) { v.textContent = '🧠 AI DETECTIVE — Nothing gets past you!'; v.style.color = '#00FF88'; }
+            else if (accuracy >= 60) { v.textContent = '👀 SHARP EYES — Pretty good instincts!'; v.style.color = '#FFD700'; }
+            else if (accuracy >= 40) { v.textContent = '🎭 FOOLED — The bots got you good!'; v.style.color = '#FF4500'; }
+            else { v.textContent = '🤖 COMPLETELY FOOLED — Are YOU a bot?!'; v.style.color = '#00BFFF'; }
+            
+            showScreen('summary');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+
+        function shareResults() {
+            const accuracy = stats.viewed > 0 ? Math.round((stats.correctGuesses / stats.viewed) * 100) : 0;
+            const text = `🔥🤖 HotOrBot Results:\n${stats.correctGuesses}/${stats.viewed} correct (${accuracy}% detection rate)\nBest streak: ${stats.bestStreak}\n\nCan you spot the AI? Play at hotorbot.com`;
+            
+            if (navigator.share) {
+                navigator.share({ text }).catch(() => {
+                    navigator.clipboard.writeText(text);
+                    alert('Copied to clipboard!');
+                });
+            } else {
+                navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('statViewed').textContent = stats.viewed;
+            document.getElementById('statHotRate').textContent = (stats.viewed > 0 ? Math.round((stats.hots / stats.viewed) * 100) : 0) + '%';
+            document.getElementById('statAccuracy').textContent = (stats.viewed > 0 ? Math.round((stats.correctGuesses / stats.viewed) * 100) : 0) + '%';
+            document.getElementById('statStreak').textContent = stats.streak;
+        }
+
+        function spawnConfetti() {
+            const colors = ['#FF4500', '#00BFFF', '#FFD700', '#00FF88', '#FF69B4', '#9B59B6'];
+            for (let i = 0; i < 30; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti-piece';
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                el.style.width = (Math.random() * 8 + 6) + 'px';
+                el.style.height = (Math.random() * 8 + 6) + 'px';
+                el.style.animationDuration = (Math.random() * 1.5 + 1) + 's';
+                el.style.animationDelay = (Math.random() * 0.5) + 's';
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 3000);
+            }
+        }
+    </script>
+</body>
+</html>
