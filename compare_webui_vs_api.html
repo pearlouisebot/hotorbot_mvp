@@ -79,12 +79,12 @@ function onReady() {
 v1.addEventListener('canplaythrough', onReady, { once: true });
 v2.addEventListener('canplaythrough', onReady, { once: true });
 
-// Re-sync periodically (drift correction)
+// Re-sync periodically (drift correction — v1 is master)
 setInterval(() => {
-  if (!v1.paused && !v2.paused && Math.abs(v1.currentTime - v2.currentTime) > 0.05) {
+  if (!v1.paused && !v2.paused && Math.abs(v1.currentTime - v2.currentTime) > 0.02) {
     v2.currentTime = v1.currentTime;
   }
-}, 500);
+}, 200);
 
 // Sync loop restart
 v1.addEventListener('seeking', () => { if (v1.currentTime === 0) v2.currentTime = 0; });
