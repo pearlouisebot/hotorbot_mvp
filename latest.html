@@ -12,14 +12,12 @@
 
         .app{width:100%;max-width:420px;height:100%;display:flex;flex-direction:column;position:relative}
 
-        /* Logo bar */
         .top-bar{display:flex;align-items:center;justify-content:center;padding:12px 16px;z-index:10}
         .logo{font-family:'Impact',sans-serif;font-size:1.6rem;text-transform:uppercase}
         .logo .hot{color:#FF4500;text-shadow:0 0 20px rgba(255,69,0,0.6)}
         .logo .or{color:#555;font-size:0.5em;vertical-align:middle;margin:0 0.1em}
         .logo .bot{color:#00BFFF;text-shadow:0 0 20px rgba(0,191,255,0.6)}
 
-        /* Card stack */
         .card-stack{flex:1;position:relative;margin:0 16px;overflow:hidden;border-radius:20px}
         .card{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;overflow:hidden;background:#111;transition:transform 0.4s ease,opacity 0.4s ease}
         .card.exiting-left{transform:translateX(-120%) rotate(-15deg);opacity:0}
@@ -27,32 +25,38 @@
         .card video{width:100%;height:100%;object-fit:cover;display:block}
         .card .emoji-fill{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:8rem;background:linear-gradient(135deg,#1a1a2e,#16213e)}
 
-        /* Name overlay */
         .card-info{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));z-index:2}
         .card-name{font-family:'Impact',sans-serif;font-size:1.8rem;text-transform:uppercase;letter-spacing:1px}
-        .card-age{color:#aaa;font-size:0.9rem;margin-top:2px}
 
-        /* Progress dots */
         .progress{display:flex;gap:4px;justify-content:center;padding:8px 16px}
         .dot{width:8px;height:8px;border-radius:50%;background:#333;transition:background 0.3s}
         .dot.active{background:#FFD700}
         .dot.seen{background:#555}
 
-        /* Vote buttons */
-        .vote-row{display:flex;gap:12px;padding:12px 16px 24px;justify-content:center}
+        .bottom-area{padding:8px 16px 24px;text-align:center}
+        .prompt{font-size:1rem;font-weight:700;color:#999;margin-bottom:8px}
+        .vote-row{display:flex;gap:12px;justify-content:center}
         .vote-btn{flex:1;max-width:160px;padding:16px;font-family:'Impact',sans-serif;font-size:1.5rem;border:none;border-radius:16px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.15s;color:#fff;-webkit-tap-highlight-color:transparent}
         .vote-btn:active{transform:scale(0.92)}
         .vote-btn.not{background:linear-gradient(135deg,#333,#444);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
         .vote-btn.hot{background:linear-gradient(135deg,#FF4500,#FF6347);box-shadow:0 4px 25px rgba(255,69,0,0.5)}
+        .vote-btn.human{background:linear-gradient(135deg,#9B59B6,#8E44AD);box-shadow:0 4px 20px rgba(155,89,182,0.4)}
+        .vote-btn.bot-btn{background:linear-gradient(135deg,#0077B6,#00BFFF);box-shadow:0 4px 20px rgba(0,191,255,0.4)}
 
-        /* Mute button */
-        .mute-btn{position:absolute;top:12px;right:12px;z-index:50;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.3rem;backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent;transition:background 0.2s}
-        .mute-btn:hover{background:rgba(0,0,0,0.8)}
+        .mute-btn{position:absolute;top:12px;right:12px;z-index:50;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.3rem;backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent}
 
-        /* Swipe hint */
-        .swipe-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Impact',sans-serif;font-size:3rem;text-transform:uppercase;opacity:0;pointer-events:none;z-index:5;text-shadow:0 2px 10px rgba(0,0,0,0.8)}
-        .swipe-hint.hot-hint{color:#FF4500}
-        .swipe-hint.not-hint{color:#fff}
+        /* Reveal overlay */
+        .reveal-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:40;border-radius:20px;opacity:0;pointer-events:none;transition:opacity 0.3s}
+        .reveal-overlay.show{opacity:1;pointer-events:auto}
+        .reveal-emoji{font-size:4rem;animation:pop 0.4s ease-out}
+        .reveal-text{font-family:'Impact',sans-serif;font-size:2rem;text-transform:uppercase;margin:8px 0}
+        .reveal-guess{font-weight:700;font-size:1rem;margin:4px 0}
+        .reveal-guess.correct{color:#00FF88}
+        .reveal-guess.wrong{color:#FF4500}
+        .reveal-tap{color:#666;font-size:0.8rem;margin-top:12px}
+        @keyframes pop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+        .hidden{display:none!important}
     </style>
 </head>
 <body>
@@ -63,39 +67,47 @@
 
         <div class="progress" id="progress"></div>
 
-        <div class="card-stack" id="cardStack"></div>
+        <div class="card-stack" id="cardStack">
+            <div class="reveal-overlay" id="revealOverlay">
+                <div class="reveal-emoji" id="revealEmoji"></div>
+                <div class="reveal-text" id="revealText"></div>
+                <div class="reveal-guess" id="revealGuess"></div>
+                <div class="reveal-tap">tap to continue</div>
+            </div>
+        </div>
 
-        <div class="vote-row">
-            <button class="vote-btn not" onclick="vote(false)">❌ NOT</button>
-            <button class="vote-btn hot" onclick="vote(true)">🔥 HOT</button>
+        <div class="bottom-area" id="bottomArea">
+            <div class="prompt" id="prompt">Feel the vibe?</div>
+            <div class="vote-row" id="voteRow">
+                <button class="vote-btn not" onclick="voteHot(false)">❌ NOT</button>
+                <button class="vote-btn hot" onclick="voteHot(true)">🔥 HOT</button>
+            </div>
         </div>
     </div>
 
     <script>
         const PROFILES = [
-            { url: "assets/amanda_hiker_hacker_v2_final.mp4", name: "Amanda", age: 28, first: true },
-            { url: "", name: "Jessica", age: 26, emoji: "👩‍🦰" },
-            { url: "", name: "Priya", age: 29, emoji: "💃" },
-            { url: "", name: "Marcus", age: 31, emoji: "😎" },
-            { url: "", name: "Taylor", age: 24, emoji: "🧑‍🎤" },
-            { url: "", name: "Kenji", age: 27, emoji: "🤙" },
-            { url: "", name: "Olivia", age: 25, emoji: "🌸" },
-            { url: "", name: "Darius", age: 30, emoji: "🔥" },
+            { url: "assets/amanda_hiker_hacker_v2_final.mp4", name: "Amanda", age: 28, isBot: true, first: true },
+            { url: "", name: "Jessica", age: 26, isBot: false, emoji: "👩‍🦰" },
+            { url: "", name: "Priya", age: 29, isBot: true, emoji: "💃" },
+            { url: "", name: "Marcus", age: 31, isBot: false, emoji: "😎" },
+            { url: "", name: "Taylor", age: 24, isBot: true, emoji: "🧑‍🎤" },
+            { url: "", name: "Kenji", age: 27, isBot: false, emoji: "🤙" },
+            { url: "", name: "Olivia", age: 25, isBot: true, emoji: "🌸" },
+            { url: "", name: "Darius", age: 30, isBot: false, emoji: "🔥" },
         ];
 
-        let order = [];
-        let current = 0;
-        let isMuted = true;
+        let order = [], current = 0, phase = 'hot', isMuted = true;
 
         function toggleMute() {
             isMuted = !isMuted;
-            document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+            const btn = document.getElementById('muteBtn');
+            if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
             const vid = document.querySelector('#currentCard video');
             if (vid) vid.muted = isMuted;
         }
 
         function init() {
-            // Amanda always first, rest shuffled
             const amanda = PROFILES.filter(p => p.first);
             const rest = PROFILES.filter(p => !p.first);
             for (let i = rest.length - 1; i > 0; i--) {
@@ -104,24 +116,33 @@
             }
             order = [...amanda, ...rest];
             current = 0;
-
-            // Progress dots
-            const prog = document.getElementById('progress');
-            prog.innerHTML = order.map((_, i) => `<div class="dot${i === 0 ? ' active' : ''}" id="dot${i}"></div>`).join('');
-
+            document.getElementById('progress').innerHTML = order.map((_, i) =>
+                `<div class="dot${i === 0 ? ' active' : ''}" id="dot${i}"></div>`
+            ).join('');
+            showHotPhase();
             renderCard();
         }
 
-        function renderCard() {
-            if (current >= order.length) {
-                // Loop back — reshuffle rest, Amanda first again
-                init();
-                return;
-            }
+        function showHotPhase() {
+            phase = 'hot';
+            document.getElementById('prompt').textContent = 'Feel the vibe?';
+            document.getElementById('voteRow').innerHTML = `
+                <button class="vote-btn not" onclick="voteHot(false)">❌ NOT</button>
+                <button class="vote-btn hot" onclick="voteHot(true)">🔥 HOT</button>`;
+        }
 
+        function showBotPhase() {
+            phase = 'bot';
+            document.getElementById('prompt').textContent = 'Real person or AI?';
+            document.getElementById('voteRow').innerHTML = `
+                <button class="vote-btn bot-btn" onclick="guessBot(true)">🤖 BOT</button>
+                <button class="vote-btn human" onclick="guessBot(false)">👤 REAL</button>`;
+        }
+
+        function renderCard() {
+            if (current >= order.length) { init(); return; }
             const stack = document.getElementById('cardStack');
             const p = order[current];
-
             const card = document.createElement('div');
             card.className = 'card';
             card.id = 'currentCard';
@@ -129,15 +150,11 @@
             if (p.url) {
                 const vid = document.createElement('video');
                 vid.src = p.url;
-                vid.playsinline = true;
                 vid.setAttribute('playsinline', '');
                 vid.setAttribute('webkit-playsinline', '');
                 vid.loop = true;
                 vid.muted = isMuted;
                 vid.autoplay = true;
-                vid.style.width = '100%';
-                vid.style.height = '100%';
-                vid.style.objectFit = 'cover';
                 card.appendChild(vid);
                 vid.play().catch(() => {});
             } else {
@@ -159,40 +176,54 @@
             info.innerHTML = `<div class="card-name">${p.name}, ${p.age}</div>`;
             card.appendChild(info);
 
-            // Remove old cards
             const old = stack.querySelector('.card:not(.exiting-left):not(.exiting-right)');
             if (old) old.remove();
-
             stack.appendChild(card);
 
-            // Update dots
             for (let i = 0; i < order.length; i++) {
                 const dot = document.getElementById('dot' + i);
-                if (!dot) continue;
-                dot.className = 'dot' + (i < current ? ' seen' : i === current ? ' active' : '');
+                if (dot) dot.className = 'dot' + (i < current ? ' seen' : i === current ? ' active' : '');
             }
         }
 
-        function vote(isHot) {
-            const card = document.getElementById('currentCard');
-            if (!card) return;
-
-            card.id = '';
-            card.classList.add(isHot ? 'exiting-right' : 'exiting-left');
-
-            // Pause video
-            const vid = card.querySelector('video');
-            if (vid) vid.pause();
-
-            current++;
-            setTimeout(renderCard, 300);
+        function voteHot(isHot) {
+            showBotPhase();
         }
 
-        // Touch swipe support
-        let touchStartX = 0;
-        let touchDeltaX = 0;
+        function guessBot(guessedBot) {
+            const p = order[current];
+            const correct = (guessedBot === p.isBot);
+            const overlay = document.getElementById('revealOverlay');
+            document.getElementById('revealEmoji').textContent = p.isBot ? '🤖' : '👤';
+            document.getElementById('revealText').textContent = p.isBot ? 'AI GENERATED!' : 'REAL PERSON!';
+            document.getElementById('revealText').style.color = p.isBot ? '#00BFFF' : '#FF4500';
+            const guess = document.getElementById('revealGuess');
+            guess.textContent = correct ? '✅ You got it!' : '❌ Fooled you!';
+            guess.className = 'reveal-guess ' + (correct ? 'correct' : 'wrong');
+            overlay.classList.add('show');
+
+            // Tap to continue
+            overlay.onclick = function() {
+                overlay.classList.remove('show');
+                overlay.onclick = null;
+                const card = document.getElementById('currentCard');
+                if (card) {
+                    card.id = '';
+                    card.classList.add('exiting-right');
+                    const vid = card.querySelector('video');
+                    if (vid) vid.pause();
+                }
+                current++;
+                showHotPhase();
+                setTimeout(renderCard, 300);
+            };
+        }
+
+        // Touch swipe (only during hot phase)
+        let touchStartX = 0, touchDeltaX = 0;
         document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
         document.addEventListener('touchmove', e => {
+            if (phase !== 'hot') return;
             touchDeltaX = e.touches[0].clientX - touchStartX;
             const card = document.getElementById('currentCard');
             if (card && Math.abs(touchDeltaX) > 10) {
@@ -201,11 +232,12 @@
             }
         }, { passive: true });
         document.addEventListener('touchend', () => {
+            if (phase !== 'hot') { touchDeltaX = 0; return; }
             const card = document.getElementById('currentCard');
             if (!card) return;
             card.style.transition = '';
             if (Math.abs(touchDeltaX) > 80) {
-                vote(touchDeltaX > 0);
+                voteHot(touchDeltaX > 0);
             } else {
                 card.style.transform = '';
             }
