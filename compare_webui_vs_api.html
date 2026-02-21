@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HotOrBot — Web UI vs API Comparison</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Impact&family=Inter:wght@400;600;700;900&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#000;color:#fff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+        
+        .logo{font-family:'Impact',sans-serif;font-size:clamp(2rem,8vw,3.5rem);text-transform:uppercase;line-height:1;margin-bottom:0.3rem}
+        .logo .hot{color:#FF4500;text-shadow:0 0 40px rgba(255,69,0,0.8)}
+        .logo .or{color:#666;font-size:0.5em;vertical-align:middle;margin:0 0.1em}
+        .logo .bot{color:#00BFFF;text-shadow:0 0 40px rgba(0,191,255,0.8)}
+        
+        .subtitle{color:#FFD700;font-weight:700;margin-bottom:2rem;font-size:1rem}
+        
+        .card{background:linear-gradient(135deg,#111,#1a1a1a);border:2px solid #333;border-radius:20px;padding:1.5rem;width:100%;max-width:420px;margin-bottom:1.5rem}
+        .card h2{font-family:'Impact',sans-serif;font-size:1.4rem;text-transform:uppercase;margin-bottom:0.3rem;letter-spacing:2px}
+        .card.webui{border-color:#FF4500}
+        .card.webui h2{color:#FF4500}
+        .card.api{border-color:#00BFFF}
+        .card.api h2{color:#00BFFF}
+        
+        .card .meta{color:#888;font-size:0.75rem;margin-bottom:0.8rem;line-height:1.4}
+        
+        .video-wrap{width:100%;border-radius:12px;overflow:hidden;background:#000}
+        .video-wrap video{width:100%;display:block}
+        
+        .specs{display:flex;gap:0.5rem;margin-top:0.8rem;flex-wrap:wrap}
+        .spec{background:rgba(255,255,255,0.05);border-radius:6px;padding:0.4rem 0.7rem;font-size:0.7rem}
+        .spec strong{color:#FFD700}
+        
+        .notes{margin-top:1.5rem;max-width:420px;color:#999;font-size:0.8rem;line-height:1.5;text-align:center}
+        .notes strong{color:#ccc}
+    </style>
+</head>
+<body>
+    <div class="logo"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
+    <div class="subtitle">🔬 Web UI vs API — Apples to Apples</div>
+    
+    <!-- Web UI Version -->
+    <div class="card webui">
+        <h2>🖥️ Web UI</h2>
+        <div class="meta">Generated via HeyGen web interface</div>
+        <div class="video-wrap">
+            <video controls playsinline preload="auto">
+                <source src="https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot/videos/amanda_webui_spiderweb.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="specs">
+            <div class="spec"><strong>720x1280</strong></div>
+            <div class="spec"><strong>11.4s</strong></div>
+            <div class="spec"><strong>1.5 Mbps</strong></div>
+            <div class="spec"><strong>2.4 MB</strong></div>
+        </div>
+    </div>
+    
+    <!-- API Version -->
+    <div class="card api">
+        <h2>⚡ API (Avatar IV)</h2>
+        <div class="meta">Generated via HeyGen API Pro • Avatar IV engine</div>
+        <div class="video-wrap">
+            <video controls playsinline preload="auto">
+                <source src="https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot/videos/amanda_api_spiderweb_avatarIV.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="specs">
+            <div class="spec"><strong>720x1280</strong></div>
+            <div class="spec"><strong>11.4s</strong></div>
+            <div class="spec"><strong>1.2 Mbps</strong></div>
+            <div class="spec"><strong>2.0 MB</strong></div>
+        </div>
+    </div>
+    
+    <div class="notes">
+        <p><strong>Same inputs:</strong> Amanda's headshot + original spiderweb voice recording (11.5s)</p>
+        <p style="margin-top:0.5rem"><strong>Same resolution & duration.</strong> Only difference: Web UI used default engine, API uses Avatar IV (newer motion model).</p>
+    </div>
+</body>
+</html>
