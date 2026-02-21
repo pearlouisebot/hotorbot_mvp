@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeyGen: Web UI vs API Comparison</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+  h1 { text-align: center; padding: 2rem 1rem 0.5rem; font-size: 1.8rem; font-weight: 700; }
+  .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+  .container { display: flex; justify-content: center; gap: 2rem; padding: 0 2rem 1rem; flex-wrap: wrap; }
+  .card { flex: 0 1 400px; background: #151515; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
+  .card video { width: 100%; display: block; background: #000; }
+  .label { padding: 1rem 1.2rem; }
+  .label h2 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+  .label .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-right: 6px; }
+  .tag.webui { background: #2d1f5e; color: #b18cfe; }
+  .tag.api { background: #1a3a2a; color: #6fdc8c; }
+  .specs { color: #777; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.6; }
+  .controls { text-align: center; padding: 1rem; }
+  .controls button { background: #fff; color: #000; border: none; padding: 10px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 0 6px; }
+  .controls button:hover { background: #ddd; }
+  .verdict { text-align: center; padding: 1.5rem; color: #888; font-size: 0.85rem; max-width: 600px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<h1>🕸️ Web UI vs API — Same Inputs</h1>
+<p class="subtitle">Same photo · Same spiderweb audio · Same talking photo · Avatar IV</p>
+
+<div class="controls">
+  <button onclick="playBoth()">▶ Play Both</button>
+  <button onclick="pauseBoth()">⏸ Pause</button>
+  <button onclick="restartBoth()">↺ Restart</button>
+</div>
+
+<div class="container">
+  <div class="card">
+    <video id="v1" playsinline loop muted autoplay>
+      <source src="assets/amanda_ai_video.mp4" type="video/mp4">
+    </video>
+    <div class="label">
+      <h2><span class="tag webui">WEB UI</span> Original</h2>
+      <div class="specs">720 × 1280 · 11.44s · 1,500 kbps · 2.4 MB</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <video id="v2" playsinline loop muted autoplay>
+      <source src="assets/amanda_heygen_v18_final.mp4" type="video/mp4">
+    </video>
+    <div class="label">
+      <h2><span class="tag api">API v18</span> Avatar IV · 1080p · Fine-tuned Framing</h2>
+      <div class="specs">1080 × 1920 · 11.44s · brown bg · cropped to match web UI</div>
+    </div>
+  </div>
+</div>
+
+<div class="verdict">
+  Both videos use the same talking photo and spiderweb voice recording.<br>
+  The API version is higher resolution (1080p vs 720p) and higher bitrate.
+</div>
+
+<script>
+const v1 = document.getElementById('v1');
+const v2 = document.getElementById('v2');
+
+function playBoth() { v1.currentTime = 0; v2.currentTime = 0; v1.play(); v2.play(); }
+function pauseBoth() { v1.pause(); v2.pause(); }
+function restartBoth() { v1.currentTime = 0; v2.currentTime = 0; v1.pause(); v2.pause(); }
+
+// Wait for both to be ready, then start together
+let ready = 0;
+function onReady() {
+  ready++;
+  if (ready >= 2) { v1.currentTime = 0; v2.currentTime = 0; v1.play(); v2.play(); }
+}
+v1.addEventListener('canplaythrough', onReady, { once: true });
+v2.addEventListener('canplaythrough', onReady, { once: true });
+
+// Re-sync periodically (drift correction — v1 is master)
+setInterval(() => {
+  if (!v1.paused && !v2.paused && Math.abs(v1.currentTime - v2.currentTime) > 0.02) {
+    v2.currentTime = v1.currentTime;
+  }
+}, 200);
+
+// Sync loop restart
+v1.addEventListener('seeking', () => { if (v1.currentTime === 0) v2.currentTime = 0; });
+</script>
+
+</body>
+</html>
