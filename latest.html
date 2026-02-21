@@ -63,9 +63,7 @@
 
         <div class="progress" id="progress"></div>
 
-        <div class="card-stack" id="cardStack">
-            <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔇</button>
-        </div>
+        <div class="card-stack" id="cardStack"></div>
 
         <div class="vote-row">
             <button class="vote-btn not" onclick="vote(false)">❌ NOT</button>
@@ -148,6 +146,13 @@
                 em.textContent = p.emoji || '😊';
                 card.appendChild(em);
             }
+
+            const muteBtn = document.createElement('button');
+            muteBtn.className = 'mute-btn';
+            muteBtn.id = 'muteBtn';
+            muteBtn.textContent = isMuted ? '🔇' : '🔊';
+            muteBtn.onclick = function(e) { e.stopPropagation(); toggleMute(); };
+            card.appendChild(muteBtn);
 
             const info = document.createElement('div');
             info.className = 'card-info';
