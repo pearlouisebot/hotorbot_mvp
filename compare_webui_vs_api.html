@@ -1,82 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HotOrBot — Web UI vs API Comparison</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Impact&family=Inter:wght@400;600;700;900&display=swap');
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:#000;color:#fff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-        
-        .logo{font-family:'Impact',sans-serif;font-size:clamp(2rem,8vw,3.5rem);text-transform:uppercase;line-height:1;margin-bottom:0.3rem}
-        .logo .hot{color:#FF4500;text-shadow:0 0 40px rgba(255,69,0,0.8)}
-        .logo .or{color:#666;font-size:0.5em;vertical-align:middle;margin:0 0.1em}
-        .logo .bot{color:#00BFFF;text-shadow:0 0 40px rgba(0,191,255,0.8)}
-        
-        .subtitle{color:#FFD700;font-weight:700;margin-bottom:2rem;font-size:1rem}
-        
-        .card{background:linear-gradient(135deg,#111,#1a1a1a);border:2px solid #333;border-radius:20px;padding:1.5rem;width:100%;max-width:420px;margin-bottom:1.5rem}
-        .card h2{font-family:'Impact',sans-serif;font-size:1.4rem;text-transform:uppercase;margin-bottom:0.3rem;letter-spacing:2px}
-        .card.webui{border-color:#FF4500}
-        .card.webui h2{color:#FF4500}
-        .card.api{border-color:#00BFFF}
-        .card.api h2{color:#00BFFF}
-        
-        .card .meta{color:#888;font-size:0.75rem;margin-bottom:0.8rem;line-height:1.4}
-        
-        .video-wrap{width:100%;border-radius:12px;overflow:hidden;background:#000}
-        .video-wrap video{width:100%;display:block}
-        
-        .specs{display:flex;gap:0.5rem;margin-top:0.8rem;flex-wrap:wrap}
-        .spec{background:rgba(255,255,255,0.05);border-radius:6px;padding:0.4rem 0.7rem;font-size:0.7rem}
-        .spec strong{color:#FFD700}
-        
-        .notes{margin-top:1.5rem;max-width:420px;color:#999;font-size:0.8rem;line-height:1.5;text-align:center}
-        .notes strong{color:#ccc}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeyGen: Web UI vs API Comparison</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+  h1 { text-align: center; padding: 2rem 1rem 0.5rem; font-size: 1.8rem; font-weight: 700; }
+  .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+  .container { display: flex; justify-content: center; gap: 2rem; padding: 0 2rem 1rem; flex-wrap: wrap; }
+  .card { flex: 0 1 400px; background: #151515; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
+  .card video { width: 100%; display: block; background: #000; }
+  .label { padding: 1rem 1.2rem; }
+  .label h2 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+  .label .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-right: 6px; }
+  .tag.webui { background: #2d1f5e; color: #b18cfe; }
+  .tag.api { background: #1a3a2a; color: #6fdc8c; }
+  .specs { color: #777; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.6; }
+  .controls { text-align: center; padding: 1rem; }
+  .controls button { background: #fff; color: #000; border: none; padding: 10px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 0 6px; }
+  .controls button:hover { background: #ddd; }
+  .verdict { text-align: center; padding: 1.5rem; color: #888; font-size: 0.85rem; max-width: 600px; margin: 0 auto; }
+</style>
 </head>
 <body>
-    <div class="logo"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
-    <div class="subtitle">🔬 Web UI vs API — Apples to Apples</div>
-    
-    <!-- Web UI Version -->
-    <div class="card webui">
-        <h2>🖥️ Web UI</h2>
-        <div class="meta">Generated via HeyGen web interface</div>
-        <div class="video-wrap">
-            <video controls playsinline preload="auto">
-                <source src="https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot/videos/amanda_webui_spiderweb.mp4" type="video/mp4">
-            </video>
-        </div>
-        <div class="specs">
-            <div class="spec"><strong>720x1280</strong></div>
-            <div class="spec"><strong>11.4s</strong></div>
-            <div class="spec"><strong>1.5 Mbps</strong></div>
-            <div class="spec"><strong>2.4 MB</strong></div>
-        </div>
+
+<h1>🕸️ Web UI vs API — Same Inputs</h1>
+<p class="subtitle">Same photo · Same spiderweb audio · Same talking photo · Avatar IV</p>
+
+<div class="controls">
+  <button onclick="playBoth()">▶ Play Both</button>
+  <button onclick="pauseBoth()">⏸ Pause</button>
+  <button onclick="restartBoth()">↺ Restart</button>
+</div>
+
+<div class="container">
+  <div class="card">
+    <video id="v1" playsinline loop muted>
+      <source src="assets/amanda_ai_video.mp4" type="video/mp4">
+    </video>
+    <div class="label">
+      <h2><span class="tag webui">WEB UI</span> Original</h2>
+      <div class="specs">720 × 1280 · 11.44s · 1,500 kbps · 2.4 MB</div>
     </div>
-    
-    <!-- API Version -->
-    <div class="card api">
-        <h2>⚡ API (Avatar IV)</h2>
-        <div class="meta">Generated via HeyGen API Pro • Avatar IV engine</div>
-        <div class="video-wrap">
-            <video controls playsinline preload="auto">
-                <source src="https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot/videos/amanda_api_spiderweb_avatarIV.mp4" type="video/mp4">
-            </video>
-        </div>
-        <div class="specs">
-            <div class="spec"><strong>720x1280</strong></div>
-            <div class="spec"><strong>11.4s</strong></div>
-            <div class="spec"><strong>1.2 Mbps</strong></div>
-            <div class="spec"><strong>2.0 MB</strong></div>
-        </div>
+  </div>
+
+  <div class="card">
+    <video id="v2" playsinline loop muted>
+      <source src="assets/amanda_heygen_v8_spiderweb.mp4" type="video/mp4">
+    </video>
+    <div class="label">
+      <h2><span class="tag api">API v8</span> Avatar IV · 1080p</h2>
+      <div class="specs">1080 × 1920 · 11.44s · 2,473 kbps · 3.8 MB</div>
     </div>
-    
-    <div class="notes">
-        <p><strong>Same inputs:</strong> Amanda's headshot + original spiderweb voice recording (11.5s)</p>
-        <p style="margin-top:0.5rem"><strong>Same resolution & duration.</strong> Only difference: Web UI used default engine, API uses Avatar IV (newer motion model).</p>
-    </div>
+  </div>
+</div>
+
+<div class="verdict">
+  Both videos use the same talking photo and spiderweb voice recording.<br>
+  The API version is higher resolution (1080p vs 720p) and higher bitrate.
+</div>
+
+<script>
+const v1 = document.getElementById('v1');
+const v2 = document.getElementById('v2');
+
+function playBoth() { v1.currentTime = 0; v2.currentTime = 0; v1.play(); v2.play(); }
+function pauseBoth() { v1.pause(); v2.pause(); }
+function restartBoth() { v1.currentTime = 0; v2.currentTime = 0; v1.pause(); v2.pause(); }
+
+// Sync on play
+v1.addEventListener('play', () => { v2.currentTime = v1.currentTime; v2.play(); });
+v2.addEventListener('play', () => { v1.currentTime = v2.currentTime; v1.play(); });
+</script>
+
 </body>
 </html>
