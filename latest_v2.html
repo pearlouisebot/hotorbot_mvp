@@ -23,13 +23,10 @@
         .card.exiting-left{transform:translateX(-120%) rotate(-15deg);opacity:0}
         .card.exiting-right{transform:translateX(120%) rotate(15deg);opacity:0}
         .card video{width:100%;height:100%;object-fit:cover;display:block}
+        .card .emoji-fill{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:8rem;background:linear-gradient(135deg,#1a1a2e,#16213e)}
 
         .card-info{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));z-index:2}
         .card-name{font-family:'Impact',sans-serif;font-size:1.8rem;text-transform:uppercase;letter-spacing:1px}
-        .card-bio{font-size:0.85rem;color:#ccc;margin-top:4px;line-height:1.3}
-        .card-tag{display:inline-block;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:10px;margin-top:6px;text-transform:uppercase;letter-spacing:1px}
-        .tag-photo{background:rgba(255,165,0,0.3);color:#FFA500;border:1px solid rgba(255,165,0,0.4)}
-        .tag-video{background:rgba(0,191,255,0.3);color:#00BFFF;border:1px solid rgba(0,191,255,0.4)}
 
         .progress{display:flex;gap:4px;justify-content:center;padding:8px 16px}
         .dot{width:8px;height:8px;border-radius:50%;background:#333;transition:background 0.3s}
@@ -48,6 +45,7 @@
 
         .mute-btn{position:absolute;top:12px;right:12px;z-index:50;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.3rem;backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent}
 
+        /* Reveal overlay */
         .reveal-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:40;border-radius:20px;opacity:0;pointer-events:none;transition:opacity 0.3s}
         .reveal-overlay.show{opacity:1;pointer-events:auto}
         .reveal-emoji{font-size:4rem;animation:pop 0.4s ease-out}
@@ -55,24 +53,16 @@
         .reveal-guess{font-weight:700;font-size:1rem;margin:4px 0}
         .reveal-guess.correct{color:#00FF88}
         .reveal-guess.wrong{color:#FF4500}
-        .reveal-sub{color:#888;font-size:0.8rem;margin-top:4px}
         .reveal-tap{color:#666;font-size:0.8rem;margin-top:12px}
         @keyframes pop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
 
-        .score-bar{display:flex;justify-content:center;gap:20px;padding:4px 16px;font-size:0.75rem;color:#666}
-        .score-bar span{color:#999}
+        .hidden{display:none!important}
     </style>
 </head>
 <body>
     <div class="app">
         <div class="top-bar">
             <div class="logo"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
-        </div>
-
-        <div class="score-bar">
-            <div>🎯 <span id="scoreCorrect">0</span></div>
-            <div>❌ <span id="scoreWrong">0</span></div>
-            <div>📊 <span id="scoreTotal">0</span>/<span id="scoreMax">7</span></div>
         </div>
 
         <div class="progress" id="progress"></div>
@@ -82,7 +72,6 @@
                 <div class="reveal-emoji" id="revealEmoji"></div>
                 <div class="reveal-text" id="revealText"></div>
                 <div class="reveal-guess" id="revealGuess"></div>
-                <div class="reveal-sub" id="revealSub"></div>
                 <div class="reveal-tap">tap to continue</div>
             </div>
         </div>
@@ -97,48 +86,18 @@
     </div>
 
     <script>
-        const CDN = "https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot";
-
         const PROFILES = [
-            {
-                video: `${CDN}/videos/profile_blonde.mp4`,
-                name: "Amanda", age: 28, isBot: true, source: "photo",
-                bio: "Hiking, hacking on side projects, and finding the best tacos in the city 🌮"
-            },
-            {
-                video: `${CDN}/videos/profile_red.mp4`,
-                name: "Scarlett", age: 26, isBot: true, source: "photo",
-                bio: "Yoga instructor by day, spicy food addict by night 🔥"
-            },
-            {
-                video: `${CDN}/videos/profile_brown.mp4`,
-                name: "Sofia", age: 27, isBot: true, source: "photo",
-                bio: "Startup founder, dog rescuer, espresso martini connoisseur 🐕"
-            },
-            {
-                video: `${CDN}/videos/profile_black.mp4`,
-                name: "Luna", age: 25, isBot: true, source: "photo",
-                bio: "Artist, night owl, and vinyl collector 🎵"
-            },
-            {
-                video: `${CDN}/videos/profile_curly.mp4`,
-                name: "Tessa", age: 24, isBot: true, source: "photo",
-                bio: "Surfer, travel blogger, firm believer life's too short for boring dates 🏄‍♀️"
-            },
-            {
-                video: `${CDN}/videos/profile_vid1.mp4`,
-                name: "Jade", age: 29, isBot: true, source: "video",
-                bio: "Tech founder who codes by day and dances salsa by night 💃"
-            },
-            {
-                video: `${CDN}/videos/profile_vid2.mp4`,
-                name: "Mia", age: 26, isBot: true, source: "video",
-                bio: "Photographer, thrift store queen, amateur chef 📸"
-            },
+            { url: "assets/amanda_hiker_hacker_v2_final.mp4", name: "Amanda", age: 28, isBot: true, first: true },
+            { url: "", name: "Jessica", age: 26, isBot: false, emoji: "👩‍🦰" },
+            { url: "", name: "Priya", age: 29, isBot: true, emoji: "💃" },
+            { url: "", name: "Marcus", age: 31, isBot: false, emoji: "😎" },
+            { url: "", name: "Taylor", age: 24, isBot: true, emoji: "🧑‍🎤" },
+            { url: "", name: "Kenji", age: 27, isBot: false, emoji: "🤙" },
+            { url: "", name: "Olivia", age: 25, isBot: true, emoji: "🌸" },
+            { url: "", name: "Darius", age: 30, isBot: false, emoji: "🔥" },
         ];
 
         let order = [], current = 0, phase = 'hot', isMuted = true;
-        let scoreCorrect = 0, scoreWrong = 0;
 
         function toggleMute() {
             isMuted = !isMuted;
@@ -148,35 +107,20 @@
             if (vid) vid.muted = isMuted;
         }
 
-        function shuffle(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
         function init() {
-            // Amanda always first, rest shuffled
-            const amanda = PROFILES[0];
-            const rest = shuffle([...PROFILES.slice(1)]);
-            order = [amanda, ...rest];
+            const amanda = PROFILES.filter(p => p.first);
+            const rest = PROFILES.filter(p => !p.first);
+            for (let i = rest.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [rest[i], rest[j]] = [rest[j], rest[i]];
+            }
+            order = [...amanda, ...rest];
             current = 0;
-            scoreCorrect = 0;
-            scoreWrong = 0;
-            updateScore();
-            document.getElementById('scoreMax').textContent = order.length;
             document.getElementById('progress').innerHTML = order.map((_, i) =>
                 `<div class="dot${i === 0 ? ' active' : ''}" id="dot${i}"></div>`
             ).join('');
             showHotPhase();
             renderCard();
-        }
-
-        function updateScore() {
-            document.getElementById('scoreCorrect').textContent = scoreCorrect;
-            document.getElementById('scoreWrong').textContent = scoreWrong;
-            document.getElementById('scoreTotal').textContent = scoreCorrect + scoreWrong;
         }
 
         function showHotPhase() {
@@ -196,26 +140,29 @@
         }
 
         function renderCard() {
-            if (current >= order.length) {
-                showResults();
-                return;
-            }
+            if (current >= order.length) { init(); return; }
             const stack = document.getElementById('cardStack');
             const p = order[current];
             const card = document.createElement('div');
             card.className = 'card';
             card.id = 'currentCard';
 
-            const vid = document.createElement('video');
-            vid.src = p.video;
-            vid.setAttribute('playsinline', '');
-            vid.setAttribute('webkit-playsinline', '');
-            vid.loop = true;
-            vid.muted = isMuted;
-            vid.autoplay = true;
-            vid.preload = 'auto';
-            card.appendChild(vid);
-            vid.play().catch(() => {});
+            if (p.url) {
+                const vid = document.createElement('video');
+                vid.src = p.url;
+                vid.setAttribute('playsinline', '');
+                vid.setAttribute('webkit-playsinline', '');
+                vid.loop = true;
+                vid.muted = isMuted;
+                vid.autoplay = true;
+                card.appendChild(vid);
+                vid.play().catch(() => {});
+            } else {
+                const em = document.createElement('div');
+                em.className = 'emoji-fill';
+                em.textContent = p.emoji || '😊';
+                card.appendChild(em);
+            }
 
             const muteBtn = document.createElement('button');
             muteBtn.className = 'mute-btn';
@@ -226,25 +173,12 @@
 
             const info = document.createElement('div');
             info.className = 'card-info';
-            const tagClass = p.source === 'video' ? 'tag-video' : 'tag-photo';
-            const tagLabel = p.source === 'video' ? '📹 from video' : '📷 from photo';
-            info.innerHTML = `
-                <div class="card-name">${p.name}, ${p.age}</div>
-                <div class="card-bio">${p.bio}</div>
-                <span class="card-tag ${tagClass}">${tagLabel}</span>`;
+            info.innerHTML = `<div class="card-name">${p.name}, ${p.age}</div>`;
             card.appendChild(info);
 
             const old = stack.querySelector('.card:not(.exiting-left):not(.exiting-right)');
             if (old) old.remove();
             stack.appendChild(card);
-
-            // Preload next
-            if (current + 1 < order.length) {
-                const link = document.createElement('link');
-                link.rel = 'prefetch';
-                link.href = order[current + 1].video;
-                document.head.appendChild(link);
-            }
 
             for (let i = 0; i < order.length; i++) {
                 const dot = document.getElementById('dot' + i);
@@ -253,16 +187,12 @@
         }
 
         function voteHot(isHot) {
-            order[current].votedHot = isHot;
             showBotPhase();
         }
 
         function guessBot(guessedBot) {
             const p = order[current];
             const correct = (guessedBot === p.isBot);
-            if (correct) scoreCorrect++; else scoreWrong++;
-            updateScore();
-
             const overlay = document.getElementById('revealOverlay');
             document.getElementById('revealEmoji').textContent = p.isBot ? '🤖' : '👤';
             document.getElementById('revealText').textContent = p.isBot ? 'AI GENERATED!' : 'REAL PERSON!';
@@ -270,16 +200,16 @@
             const guess = document.getElementById('revealGuess');
             guess.textContent = correct ? '✅ You got it!' : '❌ Fooled you!';
             guess.className = 'reveal-guess ' + (correct ? 'correct' : 'wrong');
-            document.getElementById('revealSub').textContent = p.source === 'video' ? 'Made from a video clip' : 'Made from a static photo';
             overlay.classList.add('show');
 
+            // Tap to continue
             overlay.onclick = function() {
                 overlay.classList.remove('show');
                 overlay.onclick = null;
                 const card = document.getElementById('currentCard');
                 if (card) {
                     card.id = '';
-                    card.classList.add(p.votedHot ? 'exiting-right' : 'exiting-left');
+                    card.classList.add('exiting-right');
                     const vid = card.querySelector('video');
                     if (vid) vid.pause();
                 }
@@ -289,30 +219,7 @@
             };
         }
 
-        function showResults() {
-            const total = scoreCorrect + scoreWrong;
-            const pct = Math.round((scoreCorrect / total) * 100);
-            const stack = document.getElementById('cardStack');
-            stack.innerHTML = `
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:30px;text-align:center">
-                    <div style="font-size:4rem;margin-bottom:16px">${pct >= 70 ? '🧠' : pct >= 40 ? '😅' : '🤖'}</div>
-                    <div style="font-family:Impact;font-size:2.5rem;text-transform:uppercase;margin-bottom:8px">
-                        ${pct >= 70 ? 'SHARP EYE!' : pct >= 40 ? 'NOT BAD!' : 'TOTALLY FOOLED!'}
-                    </div>
-                    <div style="font-size:1.2rem;color:#999;margin-bottom:24px">
-                        ${scoreCorrect}/${total} correct (${pct}%)
-                    </div>
-                    <div style="font-size:0.9rem;color:#666;line-height:1.6;max-width:280px;margin-bottom:32px">
-                        Every profile was AI-generated — ${PROFILES.filter(p=>p.source==='photo').length} from photos, ${PROFILES.filter(p=>p.source==='video').length} from video clips. Could you tell the difference?
-                    </div>
-                    <button onclick="init()" style="padding:16px 40px;font-family:Impact;font-size:1.3rem;border:none;border-radius:16px;background:linear-gradient(135deg,#FF4500,#FF6347);color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:2px;box-shadow:0 4px 25px rgba(255,69,0,0.5)">
-                        PLAY AGAIN 🔄
-                    </button>
-                </div>`;
-            document.getElementById('bottomArea').style.display = 'none';
-        }
-
-        // Touch swipe
+        // Touch swipe (only during hot phase)
         let touchStartX = 0, touchDeltaX = 0;
         document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
         document.addEventListener('touchmove', e => {
