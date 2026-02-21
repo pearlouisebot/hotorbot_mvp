@@ -59,6 +59,14 @@
         .reveal-detail{font-size:0.8rem;color:#aaa;line-height:1.5;max-width:300px}
         .reveal-detail strong{color:#fff}
         .reveal-tap{color:#555;font-size:0.75rem;margin-top:16px}
+        .guess-row{display:flex;gap:16px;margin-top:16px}
+        .guess-btn{padding:12px 28px;border:none;border-radius:30px;font-size:1rem;font-weight:bold;cursor:pointer;transition:transform 0.15s}
+        .guess-btn:active{transform:scale(0.95)}
+        .guess-btn.human{background:#22c55e;color:#fff}
+        .guess-btn.bot{background:#8b5cf6;color:#fff}
+        .guess-result{font-family:'Impact',sans-serif;font-size:2.2rem;text-transform:uppercase;margin:8px 0}
+        .guess-result.correct{color:#22c55e}
+        .guess-result.wrong{color:#ef4444}
         @keyframes pop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
     </style>
 </head>
@@ -78,7 +86,11 @@
             <div class="reveal-overlay" id="revealOverlay">
                 <div class="reveal-title" id="revealTitle"></div>
                 <div class="reveal-detail" id="revealDetail"></div>
-                <div class="reveal-tap">tap to continue →</div>
+                <div class="guess-row" id="guessRow">
+                    <button class="guess-btn human" onclick="submitGuess(true)">👤 REAL</button>
+                    <button class="guess-btn bot" onclick="submitGuess(false)">🤖 BOT</button>
+                </div>
+                <div class="reveal-tap" id="revealTap" style="display:none">tap to continue →</div>
             </div>
         </div>
 
@@ -104,6 +116,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "Photo → Video", cls: "tag-heygen"}
                 ],
+                isReal: false,
                 reveal: "Generated from a <strong>static headshot photo</strong> using HeyGen's Avatar IV model. Voice cloned with ElevenLabs from a 7-second recording. Post-processed with ffmpeg crop pipeline."
             },
             {
@@ -115,6 +128,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "Real Red Hair Photo", cls: "tag-real"}
                 ],
+                isReal: false,
                 reveal: "Source: a <strong>real photo of Amanda with red hair</strong>. HeyGen animated it into a talking video. Same voice clone, different character script."
             },
             {
@@ -126,6 +140,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "OpenAI gpt-image-1 Hair Edit", cls: "tag-openai"}
                 ],
+                isReal: false,
                 reveal: "Hair was changed to <strong>brown using OpenAI's gpt-image-1</strong> image editing API. Then HeyGen animated the modified photo into a talking avatar."
             },
             {
@@ -137,6 +152,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "OpenAI gpt-image-1 Hair Edit", cls: "tag-openai"}
                 ],
+                isReal: false,
                 reveal: "Hair changed to <strong>black via OpenAI image edit</strong>. HeyGen photo avatar group created from the edited image, then animated with voice clone audio."
             },
             {
@@ -148,6 +164,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "OpenAI gpt-image-1 Hair Edit", cls: "tag-openai"}
                 ],
+                isReal: false,
                 reveal: "Curly hair variant created with <strong>OpenAI gpt-image-1</strong>. Same pipeline: edit photo → upload to HeyGen → create avatar group → generate talking video."
             },
             {
@@ -159,6 +176,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "Video Frame → Photo Avatar", cls: "tag-heygen"}
                 ],
+                isReal: false,
                 reveal: "A <strong>frame was extracted from a real video clip</strong>, then used as a HeyGen photo avatar. Similar to the photo pipeline but source material came from video."
             },
             {
@@ -170,6 +188,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "Video Frame → Photo Avatar", cls: "tag-heygen"}
                 ],
+                isReal: false,
                 reveal: "Another <strong>video-frame-to-photo-avatar</strong> approach. Frame extracted from a different video clip, uploaded as a new avatar group in HeyGen."
             },
             {
@@ -181,6 +200,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "Real Video Lip-Sync", cls: "tag-sync"}
                 ],
+                isReal: false,
                 reveal: "Completely different approach! <strong>Sync Labs takes the real video</strong> and only modifies the lips to match new audio. Everything else (head movement, lighting, expressions) is the original footage. Note: source video had no talking, so lip sync looks unnatural."
             },
             {
@@ -192,6 +212,7 @@
                     {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
                     {label: "Real Video Lip-Sync", cls: "tag-sync"}
                 ],
+                isReal: false,
                 reveal: "<strong>Sync Labs lip-sync on a different video clip.</strong> Same limitation — the source video wasn't talking, so lips look off. For best results, record a video where you're actually speaking, then Sync Labs replaces WHAT you say."
             },
         ];
@@ -280,21 +301,43 @@
             }
         }
 
+        let guessCorrect = 0, guessTotal = 0, pendingHot = false;
+
         function next(hot) {
-            // Show reveal
+            pendingHot = hot;
             const p = order[current];
             const overlay = document.getElementById('revealOverlay');
-            document.getElementById('revealTitle').textContent = '🛠️ How this was made';
-            document.getElementById('revealDetail').innerHTML = p.reveal;
+            document.getElementById('revealTitle').textContent = 'Real person or AI bot?';
+            document.getElementById('revealDetail').innerHTML = `Is <strong>${p.name}</strong> a real human or AI-generated?`;
+            document.getElementById('guessRow').style.display = 'flex';
+            document.getElementById('revealTap').style.display = 'none';
+            overlay.onclick = null;
             overlay.classList.add('show');
+        }
 
+        function submitGuess(guessedReal) {
+            const p = order[current];
+            const correct = guessedReal === p.isReal;
+            guessTotal++;
+            if (correct) guessCorrect++;
+
+            const answer = p.isReal ? '👤 REAL HUMAN' : '🤖 AI BOT';
+            const resultClass = correct ? 'correct' : 'wrong';
+            const resultText = correct ? '✅ You got it!' : '❌ Nope!';
+
+            document.getElementById('guessRow').style.display = 'none';
+            document.getElementById('revealTitle').innerHTML = `<div class="guess-result ${resultClass}">${resultText}</div><div style="font-size:1.4rem;margin-top:4px">${answer}</div>`;
+            document.getElementById('revealDetail').innerHTML = `<div style="margin-bottom:12px;color:#888;font-size:0.75rem">Score: ${guessCorrect}/${guessTotal}</div>` + `<div style="color:#a5b4fc;font-size:0.7rem;font-weight:bold;margin-bottom:6px">🛠️ HOW THIS WAS MADE</div>` + p.reveal;
+            document.getElementById('revealTap').style.display = 'block';
+
+            const overlay = document.getElementById('revealOverlay');
             overlay.onclick = function() {
                 overlay.classList.remove('show');
                 overlay.onclick = null;
                 const card = document.getElementById('currentCard');
                 if (card) {
                     card.id = '';
-                    card.classList.add(hot ? 'exiting-right' : 'exiting-left');
+                    card.classList.add(pendingHot ? 'exiting-right' : 'exiting-left');
                     const vid = card.querySelector('video');
                     if (vid) vid.pause();
                 }
@@ -307,8 +350,10 @@
             const stack = document.getElementById('cardStack');
             stack.innerHTML = `
                 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center">
-                    <div style="font-size:3rem;margin-bottom:12px">🛠️</div>
-                    <div style="font-family:Impact;font-size:2rem;text-transform:uppercase;margin-bottom:12px">TOOL COMPARISON</div>
+                    <div style="font-size:3rem;margin-bottom:12px">🎯</div>
+                    <div style="font-family:Impact;font-size:2rem;text-transform:uppercase;margin-bottom:4px">YOU SCORED ${guessCorrect}/${guessTotal}</div>
+                    <div style="font-size:0.85rem;color:#aaa;margin-bottom:16px">${guessCorrect === 0 ? "AI fooled you every time 🤖" : guessCorrect === guessTotal ? "Perfect! You can spot AI anywhere 👀" : "Can you tell what's real anymore?"}</div>
+                    <div style="font-family:Impact;font-size:1.2rem;text-transform:uppercase;margin-bottom:12px;color:#a5b4fc">TOOL COMPARISON</div>
                     <div style="font-size:0.8rem;color:#999;line-height:1.6;max-width:300px;margin-bottom:20px">
                         <strong style="color:#FFA500">HeyGen Avatar IV</strong> — Photo → animated talking video<br>
                         <strong style="color:#a5b4fc">Sync Labs lipsync-2</strong> — Real video → lip replacement<br>
