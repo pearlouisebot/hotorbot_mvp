@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>HotOrBot 🔥🤖</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Impact&family=Inter:wght@400;600;700;900&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#000;color:#fff;font-family:'Inter',sans-serif;overflow:hidden;height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none}
+
+        .app{width:100%;max-width:420px;height:100%;display:flex;flex-direction:column;position:relative}
+
+        /* Logo bar */
+        .top-bar{display:flex;align-items:center;justify-content:center;padding:12px 16px;z-index:10}
+        .logo{font-family:'Impact',sans-serif;font-size:1.6rem;text-transform:uppercase}
+        .logo .hot{color:#FF4500;text-shadow:0 0 20px rgba(255,69,0,0.6)}
+        .logo .or{color:#555;font-size:0.5em;vertical-align:middle;margin:0 0.1em}
+        .logo .bot{color:#00BFFF;text-shadow:0 0 20px rgba(0,191,255,0.6)}
+
+        /* Card stack */
+        .card-stack{flex:1;position:relative;margin:0 16px;overflow:hidden;border-radius:20px}
+        .card{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;overflow:hidden;background:#111;transition:transform 0.4s ease,opacity 0.4s ease}
+        .card.exiting-left{transform:translateX(-120%) rotate(-15deg);opacity:0}
+        .card.exiting-right{transform:translateX(120%) rotate(15deg);opacity:0}
+        .card video{width:100%;height:100%;object-fit:cover;display:block}
+        .card .emoji-fill{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:8rem;background:linear-gradient(135deg,#1a1a2e,#16213e)}
+
+        /* Name overlay */
+        .card-info{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));z-index:2}
+        .card-name{font-family:'Impact',sans-serif;font-size:1.8rem;text-transform:uppercase;letter-spacing:1px}
+        .card-age{color:#aaa;font-size:0.9rem;margin-top:2px}
+
+        /* Progress dots */
+        .progress{display:flex;gap:4px;justify-content:center;padding:8px 16px}
+        .dot{width:8px;height:8px;border-radius:50%;background:#333;transition:background 0.3s}
+        .dot.active{background:#FFD700}
+        .dot.seen{background:#555}
+
+        /* Vote buttons */
+        .vote-row{display:flex;gap:12px;padding:12px 16px 24px;justify-content:center}
+        .vote-btn{flex:1;max-width:160px;padding:16px;font-family:'Impact',sans-serif;font-size:1.5rem;border:none;border-radius:16px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.15s;color:#fff;-webkit-tap-highlight-color:transparent}
+        .vote-btn:active{transform:scale(0.92)}
+        .vote-btn.not{background:linear-gradient(135deg,#333,#444);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+        .vote-btn.hot{background:linear-gradient(135deg,#FF4500,#FF6347);box-shadow:0 4px 25px rgba(255,69,0,0.5)}
+
+        /* Swipe hint */
+        .swipe-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Impact',sans-serif;font-size:3rem;text-transform:uppercase;opacity:0;pointer-events:none;z-index:5;text-shadow:0 2px 10px rgba(0,0,0,0.8)}
+        .swipe-hint.hot-hint{color:#FF4500}
+        .swipe-hint.not-hint{color:#fff}
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="top-bar">
+            <div class="logo"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
+        </div>
+
+        <div class="progress" id="progress"></div>
+
+        <div class="card-stack" id="cardStack"></div>
+
+        <div class="vote-row">
+            <button class="vote-btn not" onclick="vote(false)">❌ NOT</button>
+            <button class="vote-btn hot" onclick="vote(true)">🔥 HOT</button>
+        </div>
+    </div>
+
+    <script>
+        const PROFILES = [
+            { url: "assets/amanda_heygen_v15_final.mp4", name: "Amanda", age: 28, first: true },
+            { url: "", name: "Jessica", age: 26, emoji: "👩‍🦰" },
+            { url: "", name: "Priya", age: 29, emoji: "💃" },
+            { url: "", name: "Marcus", age: 31, emoji: "😎" },
+            { url: "", name: "Taylor", age: 24, emoji: "🧑‍🎤" },
+            { url: "", name: "Kenji", age: 27, emoji: "🤙" },
+            { url: "", name: "Olivia", age: 25, emoji: "🌸" },
+            { url: "", name: "Darius", age: 30, emoji: "🔥" },
+        ];
+
+        let order = [];
+        let current = 0;
+
+        function init() {
+            // Amanda always first, rest shuffled
+            const amanda = PROFILES.filter(p => p.first);
+            const rest = PROFILES.filter(p => !p.first);
+            for (let i = rest.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [rest[i], rest[j]] = [rest[j], rest[i]];
+            }
+            order = [...amanda, ...rest];
+            current = 0;
+
+            // Progress dots
+            const prog = document.getElementById('progress');
+            prog.innerHTML = order.map((_, i) => `<div class="dot${i === 0 ? ' active' : ''}" id="dot${i}"></div>`).join('');
+
+            renderCard();
+        }
+
+        function renderCard() {
+            if (current >= order.length) {
+                // Loop back — reshuffle rest, Amanda first again
+                init();
+                return;
+            }
+
+            const stack = document.getElementById('cardStack');
+            const p = order[current];
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = 'currentCard';
+
+            if (p.url) {
+                const vid = document.createElement('video');
+                vid.src = p.url;
+                vid.playsinline = true;
+                vid.setAttribute('playsinline', '');
+                vid.setAttribute('webkit-playsinline', '');
+                vid.loop = true;
+                vid.muted = true;
+                vid.autoplay = true;
+                vid.style.width = '100%';
+                vid.style.height = '100%';
+                vid.style.objectFit = 'cover';
+                card.appendChild(vid);
+                vid.play().catch(() => {});
+            } else {
+                const em = document.createElement('div');
+                em.className = 'emoji-fill';
+                em.textContent = p.emoji || '😊';
+                card.appendChild(em);
+            }
+
+            const info = document.createElement('div');
+            info.className = 'card-info';
+            info.innerHTML = `<div class="card-name">${p.name}, ${p.age}</div>`;
+            card.appendChild(info);
+
+            // Remove old cards
+            const old = stack.querySelector('.card:not(.exiting-left):not(.exiting-right)');
+            if (old) old.remove();
+
+            stack.appendChild(card);
+
+            // Update dots
+            for (let i = 0; i < order.length; i++) {
+                const dot = document.getElementById('dot' + i);
+                if (!dot) continue;
+                dot.className = 'dot' + (i < current ? ' seen' : i === current ? ' active' : '');
+            }
+        }
+
+        function vote(isHot) {
+            const card = document.getElementById('currentCard');
+            if (!card) return;
+
+            card.id = '';
+            card.classList.add(isHot ? 'exiting-right' : 'exiting-left');
+
+            // Pause video
+            const vid = card.querySelector('video');
+            if (vid) vid.pause();
+
+            current++;
+            setTimeout(renderCard, 300);
+        }
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchDeltaX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        document.addEventListener('touchmove', e => {
+            touchDeltaX = e.touches[0].clientX - touchStartX;
+            const card = document.getElementById('currentCard');
+            if (card && Math.abs(touchDeltaX) > 10) {
+                card.style.transition = 'none';
+                card.style.transform = `translateX(${touchDeltaX * 0.5}px) rotate(${touchDeltaX * 0.03}deg)`;
+            }
+        }, { passive: true });
+        document.addEventListener('touchend', () => {
+            const card = document.getElementById('currentCard');
+            if (!card) return;
+            card.style.transition = '';
+            if (Math.abs(touchDeltaX) > 80) {
+                vote(touchDeltaX > 0);
+            } else {
+                card.style.transform = '';
+            }
+            touchDeltaX = 0;
+        });
+
+        init();
+    </script>
+</body>
+</html>
