@@ -207,8 +207,72 @@
     </div>
 
     <script>
+        // Supabase config
+        const SUPABASE_URL = 'https://kxyqdzkoyuzszcyfvpee.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4eXFkemtveXV6c3pjeWZ2cGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTIwNTAsImV4cCI6MjA3OTM4ODA1MH0.Ewj9y9Bdv96Z0e_HkoY0fUjDdl1euHOKWJIoB0XMSLg';
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4eXFkemtveXV6c3pjeWZ2cGVlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzgxMjA1MCwiZXhwIjoyMDc5Mzg4MDUwfQ.Gky5cQAN-oNfwL2pTxp6oTeaRKb6iFlT0st3JOUj6wA';
+        const STORAGE_BUCKET = 'hotorbot-videos';
+        const AMANDA_USER_ID = 'a0000000-0000-0000-0000-000000000001';
+
         const SESSION_UUID = crypto.randomUUID();
         const CALL_DURATION = 150; // 2:30 in seconds
+        let uploadsPending = 0;
+        let uploadsComplete = 0;
+
+        async function uploadToSupabase(blob, filename, videoType) {
+            const statusEl = document.getElementById('status');
+            uploadsPending++;
+            statusEl.textContent = `☁️ Uploading recordings... (${uploadsComplete}/${uploadsPending})`;
+            statusEl.style.color = '#aaa';
+            try {
+                // Upload to storage
+                const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${filename}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'Content-Type': 'video/webm'
+                    },
+                    body: blob
+                });
+                if (!uploadRes.ok) throw new Error(`Storage upload failed: ${uploadRes.status}`);
+
+                // Insert DB row
+                const elapsedSeconds = CALL_DURATION - remainingSeconds;
+                const dbRes = await fetch(`${SUPABASE_URL}/rest/v1/hotorbot_user_videos`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        user_id: AMANDA_USER_ID,
+                        session_id: SESSION_UUID,
+                        video_type: videoType,
+                        storage_path: `${STORAGE_BUCKET}/${filename}`,
+                        storage_url: `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${filename}`,
+                        duration_seconds: elapsedSeconds,
+                        file_size_bytes: blob.size,
+                        is_internal_test: true
+                    })
+                });
+                if (!dbRes.ok) throw new Error(`DB insert failed: ${dbRes.status}`);
+
+                uploadsComplete++;
+                if (uploadsComplete >= uploadsPending) {
+                    statusEl.textContent = '✅ Uploaded! Recordings saved to cloud.';
+                    statusEl.style.color = '#34c759';
+                } else {
+                    statusEl.textContent = `☁️ Uploading recordings... (${uploadsComplete}/${uploadsPending})`;
+                }
+                console.log(`☁️ Uploaded ${filename} to Supabase`);
+            } catch (err) {
+                console.error('Upload failed:', err);
+                statusEl.textContent = `❌ Upload failed: ${err.message}`;
+                statusEl.style.color = '#ff4444';
+            }
+        }
 
         let callFrame = null;
         let countdownInterval = null;
@@ -264,6 +328,7 @@
             recorder.onstop = () => {
                 if (chunks.length === 0) return;
                 const blob = new Blob(chunks, { type: mimeType });
+                // Local download backup
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -271,6 +336,9 @@
                 a.click();
                 URL.revokeObjectURL(url);
                 console.log(`📹 ${filename} saved (${(blob.size/1024/1024).toFixed(1)}MB)`);
+                // Upload to Supabase
+                const videoType = filename.includes('training') ? 'training' : 'ai_interviewer';
+                uploadToSupabase(blob, filename, videoType);
             };
             recorder.start(1000);
             return recorder;
