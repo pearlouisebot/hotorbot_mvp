@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>🔬 Internal Test — Record Both Sides</title>
+    <script src="https://unpkg.com/@daily-co/daily-js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%; width: 100%;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+        }
+
+        #pre-call {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0a 100%);
+        }
+        .test-banner {
+            position: absolute; top: 0; left: 0; right: 0;
+            background: #ff3b30; color: #fff; text-align: center;
+            padding: 10px; font-size: 14px; font-weight: 600; z-index: 200;
+        }
+        .avatar-preview {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px; margin-bottom: 20px;
+            box-shadow: 0 0 40px rgba(255,107,107,0.3);
+        }
+        .caller-name { font-size: 28px; font-weight: 600; margin-bottom: 6px; }
+        .caller-subtitle { color: #888; font-size: 15px; margin-bottom: 40px; }
+        #start-btn {
+            width: 72px; height: 72px; border-radius: 50%; border: none;
+            background: #34c759; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; transition: transform 0.2s;
+            box-shadow: 0 4px 20px rgba(52,199,89,0.4);
+        }
+        #start-btn:hover { transform: scale(1.1); }
+        #start-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-label { margin-top: 10px; font-size: 13px; color: #888; }
+        #status { color: #aaa; font-size: 13px; margin-top: 20px; min-height: 20px; text-align: center; }
+
+        .config-toggle {
+            position: absolute; top: 50px; right: 16px;
+            background: rgba(255,255,255,0.1); border: none; color: #888;
+            font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+        }
+        .config-panel {
+            display: none; position: absolute; top: 94px; right: 16px;
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+            padding: 16px; z-index: 100; min-width: 300px;
+        }
+        .config-panel.open { display: block; }
+        .config-panel label { color: #888; font-size: 12px; display: block; margin-bottom: 4px; }
+        .config-panel input, .config-panel select {
+            width: 100%; background: #0a0a0a; border: 1px solid #333;
+            color: #fff; padding: 8px; border-radius: 8px; font-size: 13px; margin-bottom: 12px;
+        }
+
+        #call-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh; height: 100dvh;
+            background: #000;
+            z-index: 50;
+            overflow: hidden;
+        }
+        #remote-video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        #local-video {
+            position: fixed;
+            top: 60px; right: 12px;
+            width: 110px; height: 155px;
+            border-radius: 16px;
+            object-fit: cover;
+            transform: scaleX(-1);
+            z-index: 100;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            cursor: grab;
+        }
+
+        #call-controls {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 20px 0 40px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            justify-content: center; gap: 24px;
+        }
+        .ctrl-btn {
+            width: 56px; height: 56px; border-radius: 50%; border: none;
+            cursor: pointer; font-size: 22px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s;
+        }
+        .ctrl-btn:hover { transform: scale(1.1); }
+        .ctrl-mute { background: rgba(255,255,255,0.2); color: #fff; }
+        .ctrl-mute.muted { background: #ff3b30; }
+        .ctrl-end { background: #ff3b30; color: #fff; font-size: 26px; }
+        .ctrl-camera { background: rgba(255,255,255,0.2); color: #fff; }
+        .ctrl-beauty { background: rgba(255,255,255,0.2); color: #fff; }
+        .ctrl-beauty.active { background: rgba(255,180,220,0.4); }
+
+        #local-video.beauty-1 { filter: brightness(1.05) contrast(0.95) saturate(1.08) blur(0.3px); }
+        #local-video.beauty-2 { filter: brightness(1.1) contrast(0.9) saturate(1.15) blur(0.5px); }
+        #local-video.beauty-3 { filter: brightness(1.15) contrast(0.85) saturate(1.2) blur(0.8px); }
+
+        #call-topbar {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 16px 20px;
+            background: linear-gradient(rgba(0,0,0,0.6), transparent);
+            text-align: center;
+        }
+        #call-topbar .name { font-size: 17px; font-weight: 600; }
+        #call-topbar .countdown {
+            font-size: 32px; font-weight: 700; color: #ff3b30;
+            margin-top: 4px; font-variant-numeric: tabular-nums;
+        }
+        #call-topbar .rec-indicator {
+            display: inline-block; font-size: 11px; color: #ff3b30;
+            margin-top: 4px; animation: recBlink 1s ease-in-out infinite;
+        }
+        @keyframes recBlink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+        #connecting-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 200;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .pulse-ring {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,107,0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255,107,107,0); }
+        }
+        #connecting-text { margin-top: 24px; font-size: 17px; color: #ccc; }
+    </style>
+</head>
+<body>
+    <div class="test-banner">⚠️ INTERNAL TEST — Recording both sides for 2:30</div>
+
+    <div id="pre-call">
+        <button class="config-toggle" onclick="toggleConfig()">⚙️</button>
+        <div class="config-panel" id="config-panel">
+            <label>API Key</label>
+            <input type="password" id="api-key" value="d0e1465897c9452281c03345e40f0ed1">
+            <label>Persona</label>
+            <select id="persona-select">
+                <option value="date">💕 Alex — Flirty Date</option>
+                <option value="helen">👩 Helen — Casual</option>
+                <option value="lucy">👩‍💼 Lucy — Studio</option>
+            </select>
+        </div>
+        <div class="avatar-preview">💕</div>
+        <div class="caller-name" id="caller-name">Alex</div>
+        <div class="caller-subtitle">Internal Test — 2:30 recorded call</div>
+        <button id="start-btn" onclick="startDate()">📞</button>
+        <div class="btn-label">Tap to start test</div>
+        <div id="status"></div>
+    </div>
+
+    <div id="connecting-overlay">
+        <div class="pulse-ring">💕</div>
+        <div id="connecting-text">Connecting...</div>
+    </div>
+
+    <div id="call-screen">
+        <video id="remote-video" autoplay playsinline></video>
+        <video id="local-video" autoplay muted playsinline></video>
+    </div>
+
+    <div id="call-topbar">
+        <div class="name" id="call-name">Alex</div>
+        <div class="countdown" id="countdown">2:30</div>
+        <div class="rec-indicator">🔴 REC — Both sides recording</div>
+    </div>
+
+    <div id="call-controls">
+        <button class="ctrl-btn ctrl-mute" id="mute-btn" onclick="toggleMute()">🎤</button>
+        <button class="ctrl-btn ctrl-beauty" id="beauty-btn" onclick="toggleBeauty()">✨</button>
+        <button class="ctrl-btn ctrl-end" onclick="endDate()">✕</button>
+        <button class="ctrl-btn ctrl-camera" id="cam-btn" onclick="toggleCam()">📷</button>
+    </div>
+
+    <script>
+        const SESSION_UUID = crypto.randomUUID();
+        const CALL_DURATION = 150; // 2:30 in seconds
+
+        let callFrame = null;
+        let countdownInterval = null;
+        let remainingSeconds = CALL_DURATION;
+        let isMuted = false;
+        let isCamOff = false;
+        let isStarting = false;
+
+        let localRecorder = null;
+        let remoteRecorder = null;
+        let localStream = null;
+        let remoteStream = null;
+
+        const PERSONAS = {
+            date: { id: 'pccff54d0674', replica: 'r12d3eb75ec2', name: 'Alex', emoji: '💕' },
+            helen: { id: null, replica: 'r12d3eb75ec2', name: 'Helen', emoji: '👩' },
+            lucy: { id: null, replica: 'r53a461095cf', name: 'Lucy', emoji: '👩‍💼' }
+        };
+
+        const CUSTOM_GREETING = "Hey! Welcome to HotOrBot! I'm so excited to meet you. So we create an AI version of you for the app, so people can video date your avatar before meeting the real you. Can you tell me a little about yourself — what do you do, what are you passionate about, what are you looking for?";
+
+        function toggleConfig() {
+            document.getElementById('config-panel').classList.toggle('open');
+        }
+
+        document.getElementById('persona-select').addEventListener('change', (e) => {
+            const p = PERSONAS[e.target.value];
+            document.getElementById('caller-name').textContent = p.name;
+            document.querySelector('.avatar-preview').textContent = p.emoji;
+            document.getElementById('call-name').textContent = p.name;
+        });
+
+        function updateCountdown() {
+            remainingSeconds--;
+            const min = Math.floor(remainingSeconds / 60);
+            const sec = remainingSeconds % 60;
+            document.getElementById('countdown').textContent = `${min}:${String(sec).padStart(2, '0')}`;
+            if (remainingSeconds <= 0) {
+                endDate();
+            }
+            if (remainingSeconds <= 10) {
+                document.getElementById('countdown').style.color = '#ff0000';
+                document.getElementById('countdown').style.fontSize = '36px';
+            }
+        }
+
+        function startRecording(stream, filename) {
+            const chunks = [];
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+                ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+            const recorder = new MediaRecorder(stream, { mimeType });
+            recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+            recorder.onstop = () => {
+                if (chunks.length === 0) return;
+                const blob = new Blob(chunks, { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                console.log(`📹 ${filename} saved (${(blob.size/1024/1024).toFixed(1)}MB)`);
+            };
+            recorder.start(1000);
+            return recorder;
+        }
+
+        async function startDate() {
+            if (isStarting) return;
+            isStarting = true;
+
+            const apiKey = document.getElementById('api-key').value.trim();
+            if (!apiKey) {
+                document.getElementById('status').textContent = '⚠️ Tap ⚙️ to set API key';
+                isStarting = false;
+                return;
+            }
+
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('status').textContent = '📡 Connecting...';
+            document.getElementById('connecting-overlay').style.display = 'flex';
+
+            const personaType = document.getElementById('persona-select').value;
+            const persona = PERSONAS[personaType];
+            document.getElementById('connecting-text').textContent = `Calling ${persona.name}...`;
+
+            try {
+                const body = {
+                    replica_id: persona.replica,
+                    conversation_name: 'HotOrBot Internal Test',
+                    custom_greeting: CUSTOM_GREETING,
+                    properties: {
+                        max_call_duration: 180,
+                        enable_recording: true,
+                        enable_closed_captions: true
+                    }
+                };
+                if (persona.id) body.persona_id = persona.id;
+
+                const res = await fetch('https://tavusapi.com/v2/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (!data.conversation_url) {
+                    throw new Error(data.message || JSON.stringify(data));
+                }
+
+                callFrame = window.DailyIframe.createCallObject();
+
+                function attachTracks() {
+                    const participants = callFrame.participants();
+                    for (const [id, p] of Object.entries(participants)) {
+                        if (p.local) {
+                            if (p.videoTrack) {
+                                const lv = document.getElementById('local-video');
+                                localStream = new MediaStream([p.videoTrack]);
+                                if (p.audioTrack) localStream.addTrack(p.audioTrack);
+                                lv.srcObject = localStream;
+                                if (!localRecorder) {
+                                    localRecorder = startRecording(localStream, `${SESSION_UUID}_trainingvideo.webm`);
+                                }
+                            }
+                        } else {
+                            if (p.videoTrack) {
+                                const rv = document.getElementById('remote-video');
+                                remoteStream = new MediaStream([p.videoTrack]);
+                                if (p.audioTrack) remoteStream.addTrack(p.audioTrack);
+                                rv.srcObject = remoteStream;
+                                rv.play().catch(() => {});
+                                if (!remoteRecorder) {
+                                    remoteRecorder = startRecording(remoteStream, 'AI_Interviewer_Alex_RecordedVideo.webm');
+                                }
+                            }
+                            if (p.audioTrack) {
+                                if (!window._remoteAudio) {
+                                    window._remoteAudio = new Audio();
+                                    window._remoteAudio.autoplay = true;
+                                }
+                                window._remoteAudio.srcObject = new MediaStream([p.audioTrack]);
+                                window._remoteAudio.play().catch(() => {});
+                                if (remoteStream && !remoteStream.getAudioTracks().length) {
+                                    remoteStream.addTrack(p.audioTrack);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                callFrame.on('track-started', attachTracks);
+                callFrame.on('participant-joined', attachTracks);
+                callFrame.on('participant-updated', attachTracks);
+
+                callFrame.on('joined-meeting', () => {
+                    document.getElementById('connecting-overlay').style.display = 'none';
+                    document.getElementById('pre-call').style.display = 'none';
+                    document.getElementById('call-screen').style.display = 'block';
+                    document.getElementById('call-topbar').style.display = 'block';
+                    document.getElementById('call-controls').style.display = 'flex';
+                    remainingSeconds = CALL_DURATION;
+                    countdownInterval = setInterval(updateCountdown, 1000);
+                });
+
+                callFrame.on('left-meeting', () => cleanupCall());
+                callFrame.on('error', (e) => {
+                    console.error('Daily error:', e);
+                    alert('Call error: ' + (e.errorMsg || 'Unknown'));
+                    cleanupCall();
+                });
+
+                await callFrame.join({ url: data.conversation_url });
+                makeDraggable(document.getElementById('local-video'));
+
+            } catch (err) {
+                document.getElementById('connecting-overlay').style.display = 'none';
+                document.getElementById('status').textContent = '❌ ' + err.message;
+                document.getElementById('status').style.color = '#ff4444';
+                document.getElementById('start-btn').disabled = false;
+                isStarting = false;
+            }
+        }
+
+        function stopAllRecordings() {
+            if (localRecorder && localRecorder.state !== 'inactive') localRecorder.stop();
+            if (remoteRecorder && remoteRecorder.state !== 'inactive') remoteRecorder.stop();
+            localRecorder = null;
+            remoteRecorder = null;
+        }
+
+        function cleanupCall() {
+            stopAllRecordings();
+            if (callFrame) { try { callFrame.destroy(); } catch(e) {} callFrame = null; }
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById('call-screen').style.display = 'none';
+            document.getElementById('call-topbar').style.display = 'none';
+            document.getElementById('call-controls').style.display = 'none';
+            document.getElementById('remote-video').srcObject = null;
+            document.getElementById('local-video').srcObject = null;
+            document.getElementById('pre-call').style.display = 'flex';
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('status').textContent = '✅ Test complete — recordings downloading';
+            document.getElementById('status').style.color = '#34c759';
+            isStarting = false;
+        }
+
+        async function endDate() {
+            if (callFrame) await callFrame.leave();
+            cleanupCall();
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (callFrame) callFrame.setLocalAudio(!isMuted);
+            const btn = document.getElementById('mute-btn');
+            btn.textContent = isMuted ? '🔇' : '🎤';
+            btn.classList.toggle('muted', isMuted);
+        }
+
+        let beautyLevel = 0;
+        function toggleBeauty() {
+            beautyLevel = (beautyLevel + 1) % 4;
+            const lv = document.getElementById('local-video');
+            lv.classList.remove('beauty-1', 'beauty-2', 'beauty-3');
+            if (beautyLevel > 0) lv.classList.add('beauty-' + beautyLevel);
+            const btn = document.getElementById('beauty-btn');
+            btn.classList.toggle('active', beautyLevel > 0);
+            btn.textContent = beautyLevel > 0 ? '✨' + beautyLevel : '✨';
+        }
+
+        function toggleCam() {
+            isCamOff = !isCamOff;
+            if (callFrame) callFrame.setLocalVideo(!isCamOff);
+            document.getElementById('cam-btn').textContent = isCamOff ? '🚫' : '📷';
+            document.getElementById('local-video').style.opacity = isCamOff ? 0 : 1;
+        }
+
+        function makeDraggable(el) {
+            let startX, startY, startLeft, startTop;
+            el.addEventListener('touchstart', (e) => {
+                const t = e.touches[0]; startX = t.clientX; startY = t.clientY;
+                startLeft = el.offsetLeft; startTop = el.offsetTop; el.style.transition = 'none';
+            }, { passive: true });
+            el.addEventListener('touchmove', (e) => {
+                const t = e.touches[0];
+                el.style.left = (startLeft + t.clientX - startX) + 'px';
+                el.style.top = (startTop + t.clientY - startY) + 'px';
+                el.style.right = 'auto';
+            }, { passive: true });
+            el.addEventListener('touchend', () => {
+                el.style.transition = 'all 0.3s ease';
+                const rect = el.getBoundingClientRect();
+                const snapRight = (rect.left + rect.width / 2) > window.innerWidth / 2;
+                el.style.left = snapRight ? 'auto' : '12px';
+                el.style.right = snapRight ? '12px' : 'auto';
+            });
+            el.addEventListener('mousedown', (e) => {
+                startX = e.clientX; startY = e.clientY;
+                startLeft = el.offsetLeft; startTop = el.offsetTop; el.style.transition = 'none';
+                const move = (ev) => {
+                    el.style.left = (startLeft + ev.clientX - startX) + 'px';
+                    el.style.top = (startTop + ev.clientY - startY) + 'px'; el.style.right = 'auto';
+                };
+                const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); el.style.transition = 'all 0.3s ease'; };
+                document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+            });
+        }
+    </script>
+</body>
+</html>
