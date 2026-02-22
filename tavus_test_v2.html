@@ -283,6 +283,7 @@
 
     <script>
         let conversationId = null;
+        let isStarting = false;
         let timerInterval = null;
         let callStart = null;
         let localStream = null;
@@ -328,13 +329,18 @@
         }
 
         async function startDate() {
+            if (isStarting) return;
+            isStarting = true;
+
             const apiKey = document.getElementById('api-key').value.trim();
             if (!apiKey) {
-                document.getElementById('status').textContent = '⚠️ Set API key in ⚙️';
+                document.getElementById('status').textContent = '⚠️ Tap ⚙️ to set API key first';
+                isStarting = false;
                 return;
             }
 
             document.getElementById('start-btn').disabled = true;
+            document.getElementById('status').textContent = '📡 Connecting to Tavus...';
             document.getElementById('connecting-overlay').style.display = 'flex';
 
             const personaType = document.getElementById('persona-select').value;
@@ -388,8 +394,12 @@
                 }
             } catch (err) {
                 document.getElementById('connecting-overlay').style.display = 'none';
-                document.getElementById('status').textContent = '❌ ' + err.message;
+                document.getElementById('status').textContent = '❌ Error: ' + err.message;
+                document.getElementById('status').style.color = '#ff4444';
                 document.getElementById('start-btn').disabled = false;
+                isStarting = false;
+                console.error('Tavus error:', err);
+                alert('Error: ' + err.message);
             }
         }
 
