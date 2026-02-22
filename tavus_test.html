@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Date — Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        #start-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 16px 48px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 20px;
+        }
+        #start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+        }
+        #start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #status {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+        #video-container {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16/9;
+            background: #111;
+            border-radius: 16px;
+            overflow: hidden;
+            display: none;
+            position: relative;
+        }
+        #video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #end-btn {
+            display: none;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            font-size: 14px;
+            padding: 10px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        #end-btn:hover { background: #ff4444; border-color: #ff4444; }
+        .latency-display {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #0f0;
+            font-family: monospace;
+            z-index: 10;
+        }
+        .config {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .config label {
+            color: #aaa;
+            font-size: 13px;
+            margin-right: 8px;
+        }
+        .config input, .config select {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            width: 320px;
+        }
+        .config select { width: 340px; }
+        .config-row { margin-bottom: 10px; }
+        .tip {
+            max-width: 500px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎥 AI Video Date — Live Test</h1>
+    <p class="subtitle">FaceTime-style conversation with an AI avatar</p>
+
+    <div class="config">
+        <div class="config-row">
+            <label>API Key:</label>
+            <input type="password" id="api-key" placeholder="Paste your Tavus API key">
+        </div>
+        <div class="config-row">
+            <label>Persona:</label>
+            <select id="persona-select">
+                <option value="default">🎭 Default Stock Persona</option>
+                <option value="date">💕 Flirty Date Persona (custom)</option>
+            </select>
+        </div>
+    </div>
+
+    <button id="start-btn" onclick="startDate()">Start Video Date 💕</button>
+    <div id="status"></div>
+
+    <div id="video-container">
+        <div class="latency-display" id="latency">⏱ Connecting...</div>
+    </div>
+    <button id="end-btn" onclick="endDate()">End Date</button>
+
+    <p class="tip">
+        Allow camera & mic access when prompted.<br>
+        The AI will see you, hear you, and respond in real-time.<br>
+        Test the latency — ask a question and time the response!
+    </p>
+
+    <script>
+        let conversationId = null;
+        let startTime = null;
+
+        // Stock replica and persona IDs from Tavus docs
+        const STOCK_REPLICA = 're8e740a42';  // Nathan
+        const STOCK_PERSONA = 'p24293d6';     // Celebrity DJ
+
+        const DATE_SYSTEM_PROMPT = `You are a fun, charming, and flirty person on a first video date. Your name is Alex.
+
+Rules:
+- Be warm, curious, and genuinely interested in the person you're talking to
+- Ask fun "getting to know you" questions — favorites, dreams, funny stories
+- Flirt lightly and naturally — compliments, playful teasing, smiling
+- Keep responses SHORT (2-3 sentences max) — this is a conversation, not a monologue
+- React to what they say — laugh, show surprise, build on their answers
+- If there's a pause, ask another fun question
+- Be yourself — confident but not cocky, interested but not interrogating
+- NEVER mention you're an AI. You're just Alex, on a video date.
+
+Start by introducing yourself warmly and asking their name.`;
+
+        async function startDate() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            if (!apiKey) {
+                document.getElementById('status').textContent = '⚠️ Please paste your Tavus API key';
+                return;
+            }
+
+            const btn = document.getElementById('start-btn');
+            btn.disabled = true;
+            document.getElementById('status').textContent = '🔄 Setting up your date...';
+
+            try {
+                const personaType = document.getElementById('persona-select').value;
+                let personaId = STOCK_PERSONA;
+                let replicaId = STOCK_REPLICA;
+
+                // If custom date persona, create one on the fly
+                if (personaType === 'date') {
+                    document.getElementById('status').textContent = '🎭 Creating your date persona...';
+                    const personaRes = await fetch('https://tavusapi.com/v2/personas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': apiKey
+                        },
+                        body: JSON.stringify({
+                            persona_name: 'Video Date - Alex',
+                            system_prompt: DATE_SYSTEM_PROMPT,
+                            default_replica_id: STOCK_REPLICA,
+                            layers: {
+                                llm: { model: 'tavus-gpt' },
+                                tts: { tts_engine: 'cartesia' }
+                            }
+                        })
+                    });
+                    const personaData = await personaRes.json();
+                    if (personaData.persona_id) {
+                        personaId = personaData.persona_id;
+                    } else {
+                        console.log('Persona creation response:', personaData);
+                    }
+                }
+
+                document.getElementById('status').textContent = '📞 Starting video call...';
+                startTime = Date.now();
+
+                const res = await fetch('https://tavusapi.com/v2/conversations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        replica_id: replicaId,
+                        persona_id: personaId,
+                        conversation_name: 'HotOrBot Video Date Test',
+                        properties: {
+                            max_call_duration: 600,  // 10 min max
+                            enable_recording: true,
+                            enable_transcription: true
+                        }
+                    })
+                });
+
+                const data = await res.json();
+                console.log('Conversation response:', data);
+
+                if (data.conversation_url) {
+                    conversationId = data.conversation_id;
+                    const container = document.getElementById('video-container');
+                    container.style.display = 'block';
+                    container.innerHTML = `
+                        <div class="latency-display" id="latency">⏱ Connected! Time to first frame: ${((Date.now() - startTime) / 1000).toFixed(1)}s</div>
+                        <iframe
+                            src="${data.conversation_url}"
+                            allow="camera; microphone; autoplay; display-capture"
+                            allowfullscreen
+                        ></iframe>
+                    `;
+                    document.getElementById('end-btn').style.display = 'inline-block';
+                    document.getElementById('status').textContent = '✅ Connected! Say hi to your date 👋';
+                } else {
+                    document.getElementById('status').textContent = '❌ Error: ' + (data.message || JSON.stringify(data));
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                document.getElementById('status').textContent = '❌ ' + err.message;
+                btn.disabled = false;
+            }
+        }
+
+        async function endDate() {
+            if (!conversationId) return;
+            const apiKey = document.getElementById('api-key').value.trim();
+
+            try {
+                await fetch(`https://tavusapi.com/v2/conversations/${conversationId}/end`, {
+                    method: 'POST',
+                    headers: { 'x-api-key': apiKey }
+                });
+            } catch (e) { console.log('End error:', e); }
+
+            document.getElementById('video-container').style.display = 'none';
+            document.getElementById('end-btn').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('status').textContent = '📱 Date ended! How was the latency?';
+            conversationId = null;
+        }
+    </script>
+</body>
+</html>
