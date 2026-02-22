@@ -114,6 +114,19 @@
         .ctrl-mute.muted { background: #ff3b30; }
         .ctrl-end { background: #ff3b30; color: #fff; font-size: 26px; }
         .ctrl-camera { background: rgba(255,255,255,0.2); color: #fff; }
+        .ctrl-beauty { background: rgba(255,255,255,0.2); color: #fff; }
+        .ctrl-beauty.active { background: rgba(255,180,220,0.4); }
+
+        /* Beauty filter levels */
+        #local-video.beauty-1 {
+            filter: brightness(1.05) contrast(0.95) saturate(1.08) blur(0.3px);
+        }
+        #local-video.beauty-2 {
+            filter: brightness(1.1) contrast(0.9) saturate(1.15) blur(0.5px);
+        }
+        #local-video.beauty-3 {
+            filter: brightness(1.15) contrast(0.85) saturate(1.2) blur(0.8px);
+        }
 
         /* Top bar */
         #call-topbar {
@@ -192,6 +205,7 @@
     <!-- CONTROLS -->
     <div id="call-controls">
         <button class="ctrl-btn ctrl-mute" id="mute-btn" onclick="toggleMute()">🎤</button>
+        <button class="ctrl-btn ctrl-beauty" id="beauty-btn" onclick="toggleBeauty()">✨</button>
         <button class="ctrl-btn ctrl-end" onclick="endDate()">✕</button>
         <button class="ctrl-btn ctrl-camera" id="cam-btn" onclick="toggleCam()">📷</button>
     </div>
@@ -377,6 +391,21 @@
             const btn = document.getElementById('mute-btn');
             btn.textContent = isMuted ? '🔇' : '🎤';
             btn.classList.toggle('muted', isMuted);
+        }
+
+        let beautyLevel = 0; // 0=off, 1=subtle, 2=medium, 3=glam
+        const beautyLabels = ['off', 'subtle', 'medium', 'glam'];
+
+        function toggleBeauty() {
+            beautyLevel = (beautyLevel + 1) % 4;
+            const localVideo = document.getElementById('local-video');
+            localVideo.classList.remove('beauty-1', 'beauty-2', 'beauty-3');
+            if (beautyLevel > 0) {
+                localVideo.classList.add('beauty-' + beautyLevel);
+            }
+            const btn = document.getElementById('beauty-btn');
+            btn.classList.toggle('active', beautyLevel > 0);
+            btn.textContent = beautyLevel > 0 ? '✨' + beautyLevel : '✨';
         }
 
         function toggleCam() {
