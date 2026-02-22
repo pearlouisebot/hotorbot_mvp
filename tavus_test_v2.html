@@ -381,10 +381,11 @@
                         allowfullscreen
                     ></iframe>`;
 
-                    document.getElementById('call-topbar').style.display = 'block';
-                    document.getElementById('call-controls').style.display = 'flex';
+                    // Don't show our own topbar or self-view — Tavus iframe has its own
+                    // document.getElementById('call-topbar').style.display = 'block';
+                    // document.getElementById('call-controls').style.display = 'flex';
 
-                    startSelfView();
+                    // startSelfView();
                     startTimer();
 
                     // Make self-view draggable
