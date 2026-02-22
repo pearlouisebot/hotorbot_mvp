@@ -133,8 +133,9 @@
         <div class="config-row">
             <label>Persona:</label>
             <select id="persona-select">
-                <option value="default">🎭 Default Stock Persona</option>
-                <option value="date">💕 Flirty Date Persona (custom)</option>
+                <option value="date">💕 Alex — Flirty Date (custom)</option>
+                <option value="helen">👩 Helen — Casual Chat</option>
+                <option value="lucy">👩‍💼 Lucy — Studio</option>
             </select>
         </div>
     </div>
@@ -157,9 +158,9 @@
         let conversationId = null;
         let startTime = null;
 
-        // Stock replica and persona IDs from Tavus docs
-        const STOCK_REPLICA = 're8e740a42';  // Nathan
-        const STOCK_PERSONA = 'p24293d6';     // Celebrity DJ
+        // Tavus replica and persona IDs
+        const STOCK_REPLICA = 'r12d3eb75ec2';  // Helen - Casual (phoenix-4, best quality)
+        const STOCK_PERSONA = 'pccff54d0674';   // HotOrBot Date - Alex (custom flirty date persona)
 
         const DATE_SYSTEM_PROMPT = `You are a fun, charming, and flirty person on a first video date. Your name is Alex.
 
@@ -191,31 +192,13 @@ Start by introducing yourself warmly and asking their name.`;
                 let personaId = STOCK_PERSONA;
                 let replicaId = STOCK_REPLICA;
 
-                // If custom date persona, create one on the fly
+                // Use pre-created date persona, or stock for other options
                 if (personaType === 'date') {
-                    document.getElementById('status').textContent = '🎭 Creating your date persona...';
-                    const personaRes = await fetch('https://tavusapi.com/v2/personas', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-key': apiKey
-                        },
-                        body: JSON.stringify({
-                            persona_name: 'Video Date - Alex',
-                            system_prompt: DATE_SYSTEM_PROMPT,
-                            default_replica_id: STOCK_REPLICA,
-                            layers: {
-                                llm: { model: 'tavus-gpt' },
-                                tts: { tts_engine: 'cartesia' }
-                            }
-                        })
-                    });
-                    const personaData = await personaRes.json();
-                    if (personaData.persona_id) {
-                        personaId = personaData.persona_id;
-                    } else {
-                        console.log('Persona creation response:', personaData);
-                    }
+                    personaId = STOCK_PERSONA; // Pre-created Alex date persona
+                } else if (personaType === 'lucy') {
+                    replicaId = 'r53a461095cf'; // Lucy - Studio
+                } else {
+                    replicaId = STOCK_REPLICA; // Helen - Casual
                 }
 
                 document.getElementById('status').textContent = '📞 Starting video call...';
