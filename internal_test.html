@@ -235,10 +235,10 @@
 
     <script>
         // ===== CONFIG =====
-        // Project Marquee (Large compute, no upload limits)
-        const SUPABASE_URL = 'https://kxyqdzkoyuzszcyfvpee.supabase.co';
-        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4eXFkemtveXV6c3pjeWZ2cGVlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzgxMjA1MCwiZXhwIjoyMDc5Mzg4MDUwfQ.Gky5cQAN-oNfwL2pTxp6oTeaRKb6iFlT0st3JOUj6wA';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4eXFkemtveXV6c3pjeWZ2cGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTIwNTAsImV4cCI6MjA3OTM4ODA1MH0.Ewj9y9Bdv96Z0e_HkoY0fUjDdl1euHOKWJIoB0XMSLg';
+        // HotOrBot project (MandyeeBot's Supabase — new key format, use apikey header)
+        const SUPABASE_URL = 'https://dvxkihjlkilmapzaoasg.supabase.co';
+        const SUPABASE_SERVICE_KEY = 'sb_secret_HYUUQYsHr4IeRjYUYLfrng_Nr7DxmK-';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2eGtpaGpsa2lsbWFwemFvYXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MDA3MTEsImV4cCI6MjA4NzM3NjcxMX0.bMId5gI4TwHHGjvgV2R4UdA1knCXFUC0b4kBPEjszXE';
         const STORAGE_BUCKET = 'hotorbot-videos';
         const AMANDA_USER_ID = 'a0000000-0000-0000-0000-000000000001';
 
@@ -349,8 +349,8 @@
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${storagePath}`, true);
+                xhr.setRequestHeader('apikey', SUPABASE_SERVICE_KEY);
                 xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_SERVICE_KEY}`);
-                xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
                 xhr.setRequestHeader('Content-Type', mimeOverride || blob.type || 'video/webm');
                 xhr.setRequestHeader('x-upsert', 'true');
 
@@ -384,8 +384,8 @@
             await fetch(`${SUPABASE_URL}/rest/v1/hotorbot_user_videos`, {
                 method: 'POST',
                 headers: {
+                    'apikey': SUPABASE_SERVICE_KEY,
                     'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY,
                     'Content-Type': 'application/json',
                     'Prefer': 'return=minimal'
                 },
