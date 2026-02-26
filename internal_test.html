@@ -449,6 +449,19 @@
 
         let localBlobPromise = null;
         let remoteBlobPromise = null;
+        let callErrors = [];
+
+        function showCallError(msg) {
+            callErrors.push(msg);
+            let banner = document.getElementById('error-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'error-banner';
+                banner.style.cssText = 'position:fixed;bottom:60px;left:10px;right:10px;background:#ff3b30;color:#fff;padding:12px;border-radius:8px;z-index:999;font-size:12px;max-height:200px;overflow-y:auto;white-space:pre-wrap;';
+                document.body.appendChild(banner);
+            }
+            banner.textContent = callErrors.join('\n');
+        }
 
         async function startDate() {
             if (isStarting) return;
@@ -550,10 +563,25 @@
                     countdownInterval = setInterval(updateCountdown, 1000);
                 });
 
-                callFrame.on('left-meeting', () => cleanupCall());
+                callFrame.on('participant-left', (e) => {
+                    if (!e.participant.local) {
+                        const reason = `AI avatar left the call at ${actualDuration}s`;
+                        console.error(reason, e);
+                        showCallError(reason);
+                    }
+                });
+
+                callFrame.on('left-meeting', (e) => {
+                    const reason = `left-meeting fired at ${actualDuration}s — ${JSON.stringify(e || {})}`;
+                    console.error(reason);
+                    showCallError(reason);
+                    cleanupCall();
+                });
+
                 callFrame.on('error', (e) => {
-                    console.error('Daily error:', e);
-                    alert('Call error: ' + (e.errorMsg || 'Unknown'));
+                    const reason = `Daily error at ${actualDuration}s: ${e.errorMsg || e.error || JSON.stringify(e)}`;
+                    console.error(reason);
+                    showCallError(reason);
                     cleanupCall();
                 });
 
