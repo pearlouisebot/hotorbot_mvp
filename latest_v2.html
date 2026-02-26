@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HotOrBot 🔥🤖</title>
+    <title>HotOrBot 🔥🤖 v2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Impact&family=Inter:wght@400;600;700;900&display=swap');
@@ -22,41 +22,56 @@
         .card{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;overflow:hidden;background:#111;transition:transform 0.4s ease,opacity 0.4s ease}
         .card.exiting-left{transform:translateX(-120%) rotate(-15deg);opacity:0}
         .card.exiting-right{transform:translateX(120%) rotate(15deg);opacity:0}
-        .card video{width:100%;height:100%;object-fit:cover;display:block}
-        .card .emoji-fill{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:8rem;background:linear-gradient(135deg,#1a1a2e,#16213e)}
+        .card video{width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block}
 
-        .card-info{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,0.85));z-index:2}
-        .card-name{font-family:'Impact',sans-serif;font-size:1.8rem;text-transform:uppercase;letter-spacing:1px}
+        .card-info{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(0,0,0,0.9));z-index:2}
+        .card-name{font-family:'Impact',sans-serif;font-size:1.6rem;text-transform:uppercase;letter-spacing:1px}
+        .card-bio{font-size:0.8rem;color:#ccc;margin-top:2px;line-height:1.3}
+        .card-tools{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+        .tool-tag{font-size:0.55rem;font-weight:700;padding:3px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:0.5px}
+        .tag-tavus{background:rgba(167,139,250,0.25);color:#a78bfa;border:1px solid rgba(167,139,250,0.3)}
+        .tag-heygen{background:rgba(255,165,0,0.25);color:#FFA500;border:1px solid rgba(255,165,0,0.3)}
+        .tag-sync{background:rgba(99,102,241,0.25);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3)}
+        .tag-elevenlabs{background:rgba(0,200,150,0.25);color:#00c896;border:1px solid rgba(0,200,150,0.3)}
+        .tag-openai{background:rgba(255,255,255,0.15);color:#ddd;border:1px solid rgba(255,255,255,0.2)}
+        .tag-real{background:rgba(255,69,0,0.25);color:#ff6347;border:1px solid rgba(255,69,0,0.3)}
 
-        .progress{display:flex;gap:4px;justify-content:center;padding:8px 16px}
-        .dot{width:8px;height:8px;border-radius:50%;background:#333;transition:background 0.3s}
+        .ai-badge{position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#a78bfa,#f472b6);padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:700;z-index:5;text-transform:uppercase;letter-spacing:1px;animation:glow 2s ease-in-out infinite}
+        @keyframes glow{0%,100%{box-shadow:0 0 8px rgba(167,139,250,0.4)}50%{box-shadow:0 0 20px rgba(167,139,250,0.8)}}
+
+        .counter{display:flex;justify-content:center;gap:4px;padding:6px 16px}
+        .dot{width:7px;height:7px;border-radius:50%;background:#333;transition:background 0.3s}
         .dot.active{background:#FFD700}
         .dot.seen{background:#555}
 
-        .bottom-area{padding:8px 16px 24px;text-align:center}
-        .prompt{font-size:1rem;font-weight:700;color:#999;margin-bottom:8px}
-        .vote-row{display:flex;gap:12px;justify-content:center}
-        .vote-btn{flex:1;max-width:160px;padding:16px;font-family:'Impact',sans-serif;font-size:1.5rem;border:none;border-radius:16px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.15s;color:#fff;-webkit-tap-highlight-color:transparent}
+        .score-bar{display:flex;justify-content:center;gap:16px;padding:2px 16px;font-size:0.7rem;color:#666}
+
+        .bottom-area{padding:6px 16px 20px;text-align:center}
+        .prompt{font-size:0.9rem;font-weight:700;color:#999;margin-bottom:6px}
+        .vote-row{display:flex;gap:10px;justify-content:center}
+        .vote-btn{flex:1;max-width:150px;padding:14px;font-family:'Impact',sans-serif;font-size:1.4rem;border:none;border-radius:14px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.15s;color:#fff;-webkit-tap-highlight-color:transparent}
         .vote-btn:active{transform:scale(0.92)}
-        .vote-btn.not{background:linear-gradient(135deg,#333,#444);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
-        .vote-btn.hot{background:linear-gradient(135deg,#FF4500,#FF6347);box-shadow:0 4px 25px rgba(255,69,0,0.5)}
-        .vote-btn.human{background:linear-gradient(135deg,#9B59B6,#8E44AD);box-shadow:0 4px 20px rgba(155,89,182,0.4)}
-        .vote-btn.bot-btn{background:linear-gradient(135deg,#0077B6,#00BFFF);box-shadow:0 4px 20px rgba(0,191,255,0.4)}
+        .vote-btn.not{background:linear-gradient(135deg,#333,#444)}
+        .vote-btn.hot{background:linear-gradient(135deg,#FF4500,#FF6347);box-shadow:0 4px 20px rgba(255,69,0,0.4)}
 
-        .mute-btn{position:absolute;top:12px;right:12px;z-index:50;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.3rem;backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent}
+        .mute-btn{position:absolute;top:10px;right:10px;z-index:50;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;backdrop-filter:blur(8px)}
 
-        /* Reveal overlay */
-        .reveal-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:40;border-radius:20px;opacity:0;pointer-events:none;transition:opacity 0.3s}
+        .reveal-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:40;border-radius:20px;opacity:0;pointer-events:none;transition:opacity 0.3s;padding:20px;text-align:center}
         .reveal-overlay.show{opacity:1;pointer-events:auto}
-        .reveal-emoji{font-size:4rem;animation:pop 0.4s ease-out}
-        .reveal-text{font-family:'Impact',sans-serif;font-size:2rem;text-transform:uppercase;margin:8px 0}
-        .reveal-guess{font-weight:700;font-size:1rem;margin:4px 0}
-        .reveal-guess.correct{color:#00FF88}
-        .reveal-guess.wrong{color:#FF4500}
-        .reveal-tap{color:#666;font-size:0.8rem;margin-top:12px}
+        .reveal-title{font-family:'Impact',sans-serif;font-size:1.8rem;text-transform:uppercase;margin:8px 0;color:#a5b4fc}
+        .reveal-detail{font-size:0.8rem;color:#aaa;line-height:1.5;max-width:300px}
+        .reveal-detail strong{color:#fff}
+        .reveal-tap{color:#555;font-size:0.75rem;margin-top:16px}
+        .guess-row{display:flex;gap:16px;margin-top:16px}
+        .guess-btn{padding:12px 28px;border:none;border-radius:30px;font-size:1rem;font-weight:bold;cursor:pointer;transition:transform 0.15s}
+        .guess-btn:active{transform:scale(0.95)}
+        .guess-btn.human{background:#22c55e;color:#fff}
+        .guess-btn.bot{background:#8b5cf6;color:#fff}
+        .guess-result{font-family:'Impact',sans-serif;font-size:2.2rem;text-transform:uppercase;margin:8px 0}
+        .guess-result.correct{color:#22c55e}
+        .guess-result.wrong{color:#ef4444}
         @keyframes pop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
-
-        .hidden{display:none!important}
+        @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(200px) rotate(720deg);opacity:0}}
     </style>
 </head>
 <body>
@@ -65,39 +80,166 @@
             <div class="logo"><span class="hot">HOT</span><span class="or">or</span><span class="bot">BOT</span></div>
         </div>
 
-        <div class="progress" id="progress"></div>
+        <div class="score-bar">
+            <div>📊 <span id="scoreIdx">1</span>/<span id="scoreMax">10</span></div>
+        </div>
+
+        <div class="counter" id="counter"></div>
 
         <div class="card-stack" id="cardStack">
             <div class="reveal-overlay" id="revealOverlay">
-                <div class="reveal-emoji" id="revealEmoji"></div>
-                <div class="reveal-text" id="revealText"></div>
-                <div class="reveal-guess" id="revealGuess"></div>
-                <div class="reveal-tap">tap to continue</div>
+                <div class="reveal-title" id="revealTitle"></div>
+                <div class="reveal-detail" id="revealDetail"></div>
+                <div class="guess-row" id="guessRow">
+                    <button class="guess-btn human" onclick="submitGuess(true)">👤 REAL</button>
+                    <button class="guess-btn bot" onclick="submitGuess(false)">🤖 BOT</button>
+                </div>
+                <div class="reveal-tap" id="revealTap" style="display:none">tap to continue →</div>
             </div>
         </div>
 
         <div class="bottom-area" id="bottomArea">
-            <div class="prompt" id="prompt">Feel the vibe?</div>
+            <div class="prompt" id="prompt">Swipe or tap</div>
             <div class="vote-row" id="voteRow">
-                <button class="vote-btn not" onclick="voteHot(false)">❌ NOT</button>
-                <button class="vote-btn hot" onclick="voteHot(true)">🔥 HOT</button>
+                <button class="vote-btn not" onclick="next(false)">❌ NOT</button>
+                <button class="vote-btn hot" onclick="next(true)">🔥 HOT</button>
             </div>
         </div>
     </div>
 
     <script>
+        const CDN = "https://kxyqdzkoyuzszcyfvpee.supabase.co/storage/v1/object/public/hotorbot";
+
+        // FIRST profile: Tavus generative AI video of Amanda (her actual replica!)
+        const AMANDA_AI_PROFILE = {
+            video: "https://stream.mux.com/pMsETsq72oB1Gs9oOW55JsLqFyFy01GFs101mA1oOQCBU/high.mp4?download=9dcfda5155",
+            tavusVideoId: "9dcfda5155",
+            tavusHosted: "https://tavus.video/9dcfda5155",
+            name: "Amanda", age: 28,
+            bio: "Startup founder, taco hunter, built a dating app from scratch 🌮",
+            tools: [
+                {label: "Tavus Replica (phoenix-3)", cls: "tag-tavus"},
+                {label: "Generative AI Video", cls: "tag-tavus"},
+                {label: "Trained from 2:30 webcam", cls: "tag-real"}
+            ],
+            isReal: false,
+            isGenerative: true,
+            reveal: "This is a <strong>Tavus generative AI video</strong> — created from Amanda's trained replica (phoenix-3 model). She recorded a 2:30 webcam video, and Tavus learned her face, voice, and mannerisms. This video was generated from just a text script — no recording needed. This is what every user's profile video would look like.",
+            aiBadge: true
+        };
+
         const PROFILES = [
-            { url: "assets/amanda_hiker_hacker_v2_final.mp4", name: "Amanda", age: 28, isBot: true, first: true },
-            { url: "", name: "Jessica", age: 26, isBot: false, emoji: "👩‍🦰" },
-            { url: "", name: "Priya", age: 29, isBot: true, emoji: "💃" },
-            { url: "", name: "Marcus", age: 31, isBot: false, emoji: "😎" },
-            { url: "", name: "Taylor", age: 24, isBot: true, emoji: "🧑‍🎤" },
-            { url: "", name: "Kenji", age: 27, isBot: false, emoji: "🤙" },
-            { url: "", name: "Olivia", age: 25, isBot: true, emoji: "🌸" },
-            { url: "", name: "Darius", age: 30, isBot: false, emoji: "🔥" },
+            {
+                video: `${CDN}/videos/profile_blonde.mp4`,
+                name: "Amanda", age: 28,
+                bio: "Hiking, hacking on side projects, finding the best tacos 🌮",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "Photo → Video", cls: "tag-heygen"}
+                ],
+                isReal: false,
+                reveal: "Generated from a <strong>static headshot photo</strong> using HeyGen's Avatar IV model. Voice cloned with ElevenLabs from a 7-second recording."
+            },
+            {
+                video: `${CDN}/videos/profile_red.mp4`,
+                name: "Scarlett", age: 26,
+                bio: "Yoga instructor by day, spicy food addict by night 🔥",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "Real Red Hair Photo", cls: "tag-real"}
+                ],
+                isReal: false,
+                reveal: "Source: a <strong>real photo of Amanda with red hair</strong>. HeyGen animated it into a talking video."
+            },
+            {
+                video: `${CDN}/videos/profile_brown.mp4`,
+                name: "Sofia", age: 27,
+                bio: "Startup founder, dog rescuer, espresso martini connoisseur 🐕",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "OpenAI gpt-image-1 Hair Edit", cls: "tag-openai"}
+                ],
+                isReal: false,
+                reveal: "Hair was changed to <strong>brown using OpenAI's gpt-image-1</strong>. Then HeyGen animated the modified photo."
+            },
+            {
+                video: `${CDN}/videos/profile_black.mp4`,
+                name: "Luna", age: 25,
+                bio: "Artist, night owl, and vinyl collector 🎵",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "OpenAI gpt-image-1 Hair Edit", cls: "tag-openai"}
+                ],
+                isReal: false,
+                reveal: "Hair changed to <strong>black via OpenAI image edit</strong>. HeyGen photo avatar animated with voice clone."
+            },
+            {
+                video: `${CDN}/videos/profile_curly.mp4`,
+                name: "Tessa", age: 24,
+                bio: "Surfer, travel blogger, life's too short for boring dates 🏄‍♀️",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "OpenAI gpt-image-1 Hair Edit", cls: "tag-openai"}
+                ],
+                isReal: false,
+                reveal: "Curly hair variant created with <strong>OpenAI gpt-image-1</strong>. Same pipeline: edit photo → HeyGen avatar → talking video."
+            },
+            {
+                video: `${CDN}/videos/profile_vid1.mp4`,
+                name: "Jade", age: 29,
+                bio: "Tech founder who codes by day and dances salsa by night 💃",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "Video Frame → Photo Avatar", cls: "tag-heygen"}
+                ],
+                isReal: false,
+                reveal: "A <strong>frame was extracted from a real video clip</strong>, then used as a HeyGen photo avatar."
+            },
+            {
+                video: `${CDN}/videos/profile_vid2.mp4`,
+                name: "Mia", age: 26,
+                bio: "Photographer, thrift store queen, amateur chef 📸",
+                tools: [
+                    {label: "HeyGen Avatar IV", cls: "tag-heygen"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "Video Frame → Photo Avatar", cls: "tag-heygen"}
+                ],
+                isReal: false,
+                reveal: "Another <strong>video-frame-to-photo-avatar</strong> approach from a different video clip."
+            },
+            {
+                video: `${CDN}/videos/sync_profile_1.mp4`,
+                name: "Amanda v2", age: 28,
+                bio: "I build apps by day and hunt for the best street tacos by night 🌮",
+                tools: [
+                    {label: "Sync Labs lipsync-2", cls: "tag-sync"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "Real Video Lip-Sync", cls: "tag-sync"}
+                ],
+                isReal: false,
+                reveal: "<strong>Sync Labs takes the real video</strong> and only modifies the lips to match new audio. Everything else is original footage."
+            },
+            {
+                video: `${CDN}/videos/sync_profile_2.mp4`,
+                name: "Amanda v3", age: 28,
+                bio: "Looking for spontaneous adventures and deep conversations 💫",
+                tools: [
+                    {label: "Sync Labs lipsync-2", cls: "tag-sync"},
+                    {label: "ElevenLabs Voice Clone", cls: "tag-elevenlabs"},
+                    {label: "Real Video Lip-Sync", cls: "tag-sync"}
+                ],
+                isReal: false,
+                reveal: "<strong>Sync Labs lip-sync on a different video clip.</strong> Same technique — lips replaced to match AI-generated voice."
+            },
         ];
 
-        let order = [], current = 0, phase = 'hot', isMuted = true;
+        let order = [], current = 0, isMuted = true;
 
         function toggleMute() {
             isMuted = !isMuted;
@@ -107,61 +249,99 @@
             if (vid) vid.muted = isMuted;
         }
 
-        function init() {
-            const amanda = PROFILES.filter(p => p.first);
-            const rest = PROFILES.filter(p => !p.first);
-            for (let i = rest.length - 1; i > 0; i--) {
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [rest[i], rest[j]] = [rest[j], rest[i]];
+                [arr[i], arr[j]] = [arr[j], arr[i]];
             }
-            order = [...amanda, ...rest];
+            return arr;
+        }
+
+        // Fetch Tavus video download URL
+        async function fetchTavusVideo() {
+            try {
+                const res = await fetch(`https://tavusapi.com/v2/videos/${AMANDA_AI_PROFILE.tavusVideoId}`, {
+                    headers: { 'x-api-key': 'd0e1465897c9452281c03345e40f0ed1' }
+                });
+                const data = await res.json();
+                if (data.download_url) {
+                    AMANDA_AI_PROFILE.video = data.download_url;
+                } else if (data.stream_url) {
+                    AMANDA_AI_PROFILE.video = data.stream_url;
+                } else {
+                    // Video still generating — use hosted page as fallback
+                    console.warn('Tavus video still generating, status:', data.status, data.generation_progress);
+                    AMANDA_AI_PROFILE.video = null;
+                }
+                return data;
+            } catch(e) {
+                console.error('Failed to fetch Tavus video:', e);
+                return null;
+            }
+        }
+
+        async function init() {
+            // Try to get Tavus video URL
+            const tavusData = await fetchTavusVideo();
+
+            // Amanda AI generative first, then shuffle rest
+            if (AMANDA_AI_PROFILE.video) {
+                order = [AMANDA_AI_PROFILE, ...shuffle([...PROFILES])];
+            } else {
+                // If Tavus video not ready, show a placeholder card
+                AMANDA_AI_PROFILE.videoStatus = tavusData ? `${tavusData.status} (${tavusData.generation_progress || 'pending'})` : 'unavailable';
+                order = [AMANDA_AI_PROFILE, ...shuffle([...PROFILES])];
+            }
+
             current = 0;
-            document.getElementById('progress').innerHTML = order.map((_, i) =>
+            document.getElementById('scoreMax').textContent = order.length;
+            document.getElementById('counter').innerHTML = order.map((_, i) =>
                 `<div class="dot${i === 0 ? ' active' : ''}" id="dot${i}"></div>`
             ).join('');
-            showHotPhase();
+            document.getElementById('bottomArea').style.display = '';
             renderCard();
         }
 
-        function showHotPhase() {
-            phase = 'hot';
-            document.getElementById('prompt').textContent = 'Feel the vibe?';
-            document.getElementById('voteRow').innerHTML = `
-                <button class="vote-btn not" onclick="voteHot(false)">❌ NOT</button>
-                <button class="vote-btn hot" onclick="voteHot(true)">🔥 HOT</button>`;
-        }
-
-        function showBotPhase() {
-            phase = 'bot';
-            document.getElementById('prompt').textContent = 'Real person or AI?';
-            document.getElementById('voteRow').innerHTML = `
-                <button class="vote-btn bot-btn" onclick="guessBot(true)">🤖 BOT</button>
-                <button class="vote-btn human" onclick="guessBot(false)">👤 REAL</button>`;
-        }
-
         function renderCard() {
-            if (current >= order.length) { init(); return; }
+            if (current >= order.length) { showEnd(); return; }
+            document.getElementById('scoreIdx').textContent = current + 1;
             const stack = document.getElementById('cardStack');
             const p = order[current];
             const card = document.createElement('div');
             card.className = 'card';
             card.id = 'currentCard';
 
-            if (p.url) {
+            if (p.video) {
                 const vid = document.createElement('video');
-                vid.src = p.url;
+                vid.src = p.video;
                 vid.setAttribute('playsinline', '');
                 vid.setAttribute('webkit-playsinline', '');
                 vid.loop = true;
                 vid.muted = isMuted;
                 vid.autoplay = true;
+                vid.preload = 'auto';
+                vid.crossOrigin = 'anonymous';
                 card.appendChild(vid);
                 vid.play().catch(() => {});
-            } else {
-                const em = document.createElement('div');
-                em.className = 'emoji-fill';
-                em.textContent = p.emoji || '😊';
-                card.appendChild(em);
+            } else if (p.isGenerative) {
+                // Tavus video not ready yet — show generating status
+                const placeholder = document.createElement('div');
+                placeholder.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#0a0a0a);padding:20px;text-align:center;';
+                placeholder.innerHTML = `
+                    <div style="font-size:60px;margin-bottom:16px;animation:pulse 1.5s ease-in-out infinite">🤖</div>
+                    <div style="font-family:Impact;font-size:1.4rem;color:#a78bfa;text-transform:uppercase;margin-bottom:8px">AI Video Generating...</div>
+                    <div style="font-size:0.8rem;color:#888;line-height:1.5">Tavus is creating Amanda's<br>generative AI profile video<br><br>Status: ${p.videoStatus || 'generating'}</div>
+                    <div style="margin-top:16px;font-size:0.7rem;color:#555">Swipe to see the talking head videos →</div>
+                `;
+                card.appendChild(placeholder);
+            }
+
+            // AI badge for generative video
+            if (p.aiBadge) {
+                const badge = document.createElement('div');
+                badge.className = 'ai-badge';
+                badge.textContent = '✨ AI GENERATIVE';
+                card.appendChild(badge);
             }
 
             const muteBtn = document.createElement('button');
@@ -173,12 +353,24 @@
 
             const info = document.createElement('div');
             info.className = 'card-info';
-            info.innerHTML = `<div class="card-name">${p.name}, ${p.age}</div>`;
+            const toolsHtml = p.tools.map(t => `<span class="tool-tag ${t.cls}">${t.label}</span>`).join('');
+            info.innerHTML = `
+                <div class="card-name">${p.name}, ${p.age}</div>
+                <div class="card-bio">${p.bio}</div>
+                <div class="card-tools">${toolsHtml}</div>`;
             card.appendChild(info);
 
             const old = stack.querySelector('.card:not(.exiting-left):not(.exiting-right)');
             if (old) old.remove();
             stack.appendChild(card);
+
+            // Preload next
+            if (current + 1 < order.length && order[current + 1].video) {
+                const link = document.createElement('link');
+                link.rel = 'prefetch';
+                link.href = order[current + 1].video;
+                document.head.appendChild(link);
+            }
 
             for (let i = 0; i < order.length; i++) {
                 const dot = document.getElementById('dot' + i);
@@ -186,44 +378,107 @@
             }
         }
 
-        function voteHot(isHot) {
-            showBotPhase();
+        let guessCorrect = 0, guessTotal = 0, pendingHot = false;
+
+        function next(hot) {
+            pendingHot = hot;
+            const p = order[current];
+            const overlay = document.getElementById('revealOverlay');
+            document.getElementById('revealTitle').textContent = 'Real person or AI bot?';
+            document.getElementById('revealDetail').innerHTML = `Is <strong>${p.name}</strong> a real human or AI-generated?`;
+            document.getElementById('guessRow').style.display = 'flex';
+            document.getElementById('revealTap').style.display = 'none';
+            overlay.onclick = null;
+            overlay.classList.add('show');
         }
 
-        function guessBot(guessedBot) {
-            const p = order[current];
-            const correct = (guessedBot === p.isBot);
-            const overlay = document.getElementById('revealOverlay');
-            document.getElementById('revealEmoji').textContent = p.isBot ? '🤖' : '👤';
-            document.getElementById('revealText').textContent = p.isBot ? 'AI GENERATED!' : 'REAL PERSON!';
-            document.getElementById('revealText').style.color = p.isBot ? '#00BFFF' : '#FF4500';
-            const guess = document.getElementById('revealGuess');
-            guess.textContent = correct ? '✅ You got it!' : '❌ Fooled you!';
-            guess.className = 'reveal-guess ' + (correct ? 'correct' : 'wrong');
-            overlay.classList.add('show');
+        let streak = 0;
 
-            // Tap to continue
+        function spawnConfetti() {
+            const colors = ['#FF4500','#FFD700','#00FF88','#00BFFF','#FF69B4','#a5b4fc'];
+            const overlay = document.getElementById('revealOverlay');
+            for (let i = 0; i < 40; i++) {
+                const c = document.createElement('div');
+                c.style.cssText = `position:absolute;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};top:${30+Math.random()*20}%;left:${Math.random()*100}%;opacity:1;pointer-events:none;z-index:99;animation:confettiFall ${1+Math.random()*1.5}s ease-out forwards`;
+                overlay.appendChild(c);
+                setTimeout(() => c.remove(), 2500);
+            }
+        }
+
+        function submitGuess(guessedReal) {
+            const p = order[current];
+            const correct = guessedReal === p.isReal;
+            guessTotal++;
+            if (correct) { guessCorrect++; streak++; } else { streak = 0; }
+
+            const emoji = p.isReal ? '👤' : '🤖';
+            const answer = p.isReal ? 'THAT WAS REAL!' : 'IT WAS A BOT!';
+            const answerColor = p.isReal ? '#FF4500' : '#00BFFF';
+
+            document.getElementById('guessRow').style.display = 'none';
+            document.getElementById('revealTitle').innerHTML = `
+                <div style="font-size:4rem;animation:pop 0.3s ease-out">${emoji}</div>
+                <div style="font-family:Impact;font-size:2rem;color:${answerColor};text-transform:uppercase;margin:8px 0">${answer}</div>`;
+
+            if (correct) {
+                document.getElementById('revealDetail').innerHTML = `<div class="guess-result correct" style="font-size:1.3rem">✅ You guessed correctly!${streak > 1 ? ` (${streak} streak 🔥)` : ''}</div>`;
+                spawnConfetti();
+            } else {
+                document.getElementById('revealDetail').innerHTML = `<div class="guess-result wrong" style="font-size:1.3rem">❌ You guessed wrong!</div>`;
+            }
+
+            document.getElementById('revealTap').style.display = 'block';
+            document.getElementById('revealTap').textContent = 'tap to see how it was made →';
+
+            const overlay = document.getElementById('revealOverlay');
             overlay.onclick = function() {
-                overlay.classList.remove('show');
-                overlay.onclick = null;
-                const card = document.getElementById('currentCard');
-                if (card) {
-                    card.id = '';
-                    card.classList.add('exiting-right');
-                    const vid = card.querySelector('video');
-                    if (vid) vid.pause();
-                }
-                current++;
-                showHotPhase();
-                setTimeout(renderCard, 300);
+                document.getElementById('revealTitle').innerHTML = '🛠️ HOW IT WAS MADE';
+                document.getElementById('revealDetail').innerHTML = p.reveal;
+                document.getElementById('revealTap').textContent = 'tap to continue →';
+
+                overlay.onclick = function() {
+                    overlay.classList.remove('show');
+                    overlay.onclick = null;
+                    const card = document.getElementById('currentCard');
+                    if (card) {
+                        card.id = '';
+                        card.classList.add(pendingHot ? 'exiting-right' : 'exiting-left');
+                        const vid = card.querySelector('video');
+                        if (vid) vid.pause();
+                    }
+                    current++;
+                    setTimeout(renderCard, 300);
+                };
             };
         }
 
-        // Touch swipe (only during hot phase)
+        function showEnd() {
+            const stack = document.getElementById('cardStack');
+            stack.innerHTML = `
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center">
+                    <div style="font-size:3rem;margin-bottom:12px">🎯</div>
+                    <div style="font-family:Impact;font-size:2rem;text-transform:uppercase;margin-bottom:4px">YOU SCORED ${guessCorrect}/${guessTotal}</div>
+                    <div style="font-size:0.85rem;color:#aaa;margin-bottom:16px">${guessCorrect === 0 ? "AI fooled you every time 🤖" : guessCorrect === guessTotal ? "Perfect! You can spot AI anywhere 👀" : "Can you tell what's real anymore?"}</div>
+                    <div style="font-family:Impact;font-size:1.2rem;text-transform:uppercase;margin-bottom:12px;color:#a5b4fc">TOOL COMPARISON</div>
+                    <div style="font-size:0.8rem;color:#999;line-height:1.6;max-width:300px;margin-bottom:20px">
+                        <strong style="color:#a78bfa">Tavus (phoenix-3)</strong> — Generative AI from webcam training<br>
+                        <strong style="color:#FFA500">HeyGen Avatar IV</strong> — Photo → animated talking video<br>
+                        <strong style="color:#a5b4fc">Sync Labs lipsync-2</strong> — Real video → lip replacement<br>
+                        <strong style="color:#00c896">ElevenLabs</strong> — Voice cloning from 7s recording<br>
+                        <strong style="color:#ddd">OpenAI gpt-image-1</strong> — AI hair color editing<br><br>
+                        <span style="color:#666">10 profiles, all from one person's photos + videos</span>
+                    </div>
+                    <button onclick="init()" style="padding:14px 36px;font-family:Impact;font-size:1.2rem;border:none;border-radius:14px;background:linear-gradient(135deg,#FF4500,#FF6347);color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:2px;box-shadow:0 4px 20px rgba(255,69,0,0.4)">
+                        WATCH AGAIN 🔄
+                    </button>
+                </div>`;
+            document.getElementById('bottomArea').style.display = 'none';
+        }
+
+        // Touch swipe
         let touchStartX = 0, touchDeltaX = 0;
         document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
         document.addEventListener('touchmove', e => {
-            if (phase !== 'hot') return;
             touchDeltaX = e.touches[0].clientX - touchStartX;
             const card = document.getElementById('currentCard');
             if (card && Math.abs(touchDeltaX) > 10) {
@@ -232,12 +487,11 @@
             }
         }, { passive: true });
         document.addEventListener('touchend', () => {
-            if (phase !== 'hot') { touchDeltaX = 0; return; }
             const card = document.getElementById('currentCard');
             if (!card) return;
             card.style.transition = '';
             if (Math.abs(touchDeltaX) > 80) {
-                voteHot(touchDeltaX > 0);
+                next(touchDeltaX > 0);
             } else {
                 card.style.transform = '';
             }
