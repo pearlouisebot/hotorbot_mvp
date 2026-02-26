@@ -417,10 +417,14 @@
 
             if (localBlob) {
                 console.log(`Local blob: ${localBlob.size} bytes, type=${localBlob.type}`);
-                downloadBlob(localBlob, localPath);
+                // Auto-trim leading silence for Tavus training compatibility
+                const trimmedLocal = await trimLeadingSilence(localBlob);
+                const finalLocalBlob = trimmedLocal || localBlob;
+                console.log(`After trim: ${finalLocalBlob.size} bytes (was ${localBlob.size})`);
+                downloadBlob(finalLocalBlob, localPath);
                 uploads.push(
-                    uploadToSupabase(localBlob, localPath, 'bar-local', 'pct-local', contentType)
-                        .then(() => logToDatabase('training', localPath, localBlob.size))
+                    uploadToSupabase(finalLocalBlob, localPath, 'bar-local', 'pct-local', contentType)
+                        .then(() => logToDatabase('training', localPath, finalLocalBlob.size))
                         .catch(e => { console.error('Local upload failed:', e); document.getElementById('pct-local').textContent = '❌ ' + e.message; })
                 );
             } else {
@@ -445,6 +449,117 @@
             document.getElementById('upload-status').textContent = '✅ All uploads complete!';
             await new Promise(r => setTimeout(r, 2000));
             document.getElementById('upload-overlay').style.display = 'none';
+        }
+
+        // Detect leading silence and trim by re-recording without silent portion.
+        // Tavus rejects training videos with long silence at start.
+        async function trimLeadingSilence(blob) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const arrayBuffer = await blob.arrayBuffer();
+                let audioBuffer;
+                try {
+                    audioBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+                } catch (e) {
+                    console.warn('Cannot decode audio for silence detection:', e.message);
+                    audioCtx.close();
+                    return null;
+                }
+
+                const channelData = audioBuffer.getChannelData(0);
+                const sampleRate = audioBuffer.sampleRate;
+                const threshold = 0.01;
+                const windowSize = Math.floor(sampleRate * 0.1);
+
+                let firstSoundSample = 0;
+                for (let i = 0; i < channelData.length - windowSize; i += windowSize) {
+                    let rms = 0;
+                    for (let j = i; j < i + windowSize; j++) {
+                        rms += channelData[j] * channelData[j];
+                    }
+                    rms = Math.sqrt(rms / windowSize);
+                    if (rms > threshold) {
+                        firstSoundSample = Math.max(0, i - sampleRate);
+                        break;
+                    }
+                }
+
+                const silenceDuration = firstSoundSample / sampleRate;
+                console.log(`Leading silence: ${silenceDuration.toFixed(1)}s`);
+                audioCtx.close();
+
+                if (silenceDuration < 2) {
+                    console.log('Under 2s silence, no trim needed');
+                    return null;
+                }
+
+                // Trim by creating a new MediaSource playback + re-record
+                // Create video element, seek past silence, re-record
+                const videoEl = document.createElement('video');
+                videoEl.muted = false;
+                videoEl.src = URL.createObjectURL(blob);
+                await new Promise(r => { videoEl.onloadedmetadata = r; });
+                videoEl.currentTime = silenceDuration;
+                await new Promise(r => { videoEl.onseeked = r; });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = videoEl.videoWidth || 640;
+                canvas.height = videoEl.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+
+                // Capture video stream from canvas + audio from video element
+                const canvasStream = canvas.captureStream(30);
+                let destStream;
+                try {
+                    const audioCtx2 = new AudioContext();
+                    const source = audioCtx2.createMediaElementSource(videoEl);
+                    const dest = audioCtx2.createMediaStreamDestination();
+                    source.connect(dest);
+                    source.connect(audioCtx2.destination);
+                    destStream = new MediaStream([
+                        ...canvasStream.getVideoTracks(),
+                        ...dest.stream.getAudioTracks()
+                    ]);
+                } catch (e) {
+                    console.warn('Audio re-capture failed, video-only trim:', e.message);
+                    destStream = canvasStream;
+                }
+
+                const mimeType = pickMimeType();
+                const trimRecorder = new MediaRecorder(destStream, 
+                    mimeType ? { mimeType, videoBitsPerSecond: 1500000 } : { videoBitsPerSecond: 1500000 });
+                const chunks = [];
+                trimRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+                const trimDone = new Promise(resolve => {
+                    trimRecorder.onstop = () => {
+                        const trimmed = new Blob(chunks, { type: mimeType || 'video/webm' });
+                        console.log(`Trimmed blob: ${trimmed.size} bytes (removed ${silenceDuration.toFixed(1)}s)`);
+                        resolve(trimmed);
+                    };
+                });
+
+                trimRecorder.start(1000);
+                // Draw video frames to canvas
+                function drawFrame() {
+                    if (videoEl.ended || videoEl.paused) {
+                        trimRecorder.stop();
+                        return;
+                    }
+                    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                    requestAnimationFrame(drawFrame);
+                }
+                videoEl.play();
+                drawFrame();
+                videoEl.onended = () => { trimRecorder.stop(); };
+
+                const trimmedBlob = await trimDone;
+                URL.revokeObjectURL(videoEl.src);
+                return trimmedBlob;
+            } catch (e) {
+                console.warn('Silence trim failed (non-fatal, using original):', e.message);
+                return null;
+            }
         }
 
         let localBlobPromise = null;
